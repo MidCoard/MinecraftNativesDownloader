@@ -1,0 +1,414 @@
+<!--
+  ~ Copyright LWJGL. All rights reserved.
+  ~ License terms: https://www.lwjgl.org/license
+  -->
+<project name="native-macos" basedir="../.." xmlns:if="ant:if" xmlns:unless="ant:unless">
+    <import file="../build-definitions.xml"/>
+
+    <!-- Ask Xcode for correct path to XCode tools -->
+    <!-- Will fail if XCode Command Line Tools are not installed on 10.7+ (Lion) -->
+    <exec executable="xcode-select" outputproperty="developer_path" errorproperty="xcode-error" failonerror="false" failifexecutionfails="false">
+        <arg value="--print-path"/>
+    </exec>
+    <!-- Default to /Developer if xcode-select fails -->
+    <condition property="developer_path" value="/Developer">
+        <isset property="xcode-error"/>
+    </condition>
+
+    <!-- Choose a MacOSX SDK -->
+    <macrodef name="find-sdkroot">
+        <attribute name="version"/>
+
+        <sequential>
+            <condition property="sdkroot" value="${developer_path}/SDKs/MacOSX@{version}.sdk">
+                <and>
+                    <not><isset property="sdkroot"/></not>
+                    <available file="${developer_path}/SDKs/MacOSX@{version}.sdk" type="dir"/>
+                </and>
+            </condition>
+            <condition property="sdkroot" value="${developer_path}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX@{version}.sdk">
+                <and>
+                    <not><isset property="sdkroot"/></not>
+                    <available file="${developer_path}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX@{version}.sdk" type="dir"/>
+                </and>
+            </condition>
+        </sequential>
+    </macrodef>
+    <find-sdkroot version="11.3"/>
+    <find-sdkroot version="10.14"/>
+    <find-sdkroot version="10.13"/>
+    <find-sdkroot version="10.12"/>
+    <find-sdkroot version="10.11"/>
+    <find-sdkroot version="10.10"/>
+    <find-sdkroot version="10.9"/>
+    <fail unless="sdkroot" message="Failed to find the macOS SDK."/>
+
+    <property name="macosx-version-min" value="10.9"/>
+
+    <property name="module.lwjgl.rel" value="../../../../${module.lwjgl}"/>
+
+    <macrodef name="compile">
+        <attribute name="dest" default="${dest}"/>
+        <attribute name="lang" default="c"/>
+        <attribute name="flags" default=""/>
+        <attribute name="simple" default="false"/>
+        <attribute name="relative" default="true"/>
+        <element name="source" implicit="true" optional="true"/>
+        <sequential>
+            <local name="cpp"/>
+            <condition property="cpp"><not><equals arg1="@{lang}" arg2="c"/></not></condition>
+            <local name="clang"/>
+            <condition property="clang" value="clang" else="clang++"><equals arg1="@{lang}" arg2="c"/></condition>
+
+            <mkdir dir="@{dest}"/>
+            <apply dir="@{dest}" executable="${clang}" dest="@{dest}" skipemptyfilesets="true" failonerror="true" parallel="true" taskname="Compiler">
+                <arg line="-c -std=c11 -ObjC" unless:set="cpp"/>
+                <arg line="-c -std=c++11" if:set="cpp"/>
+                <arg line="-O3 -flto -fPIC @{flags} -DNDEBUG -DLWJGL_MACOS -DLWJGL_${build.arch} -isysroot ${sdkroot} -mmacosx-version-min=${macosx-version-min}"/>
+
+                <arg value="-I${jni.headers}"/>
+                <arg value="-I${jni.headers}/darwin"/>
+
+                <arg value="-I${module.lwjgl.rel}/core/src/main/c"/>
+                <arg value="-I${module.lwjgl.rel}/core/src/main/c/${platform}"/>
+
+                <arg value="-I${src.main.rel}" if:true="@{simple}"/>
+
+                <source/>
+                <fileset dir="." includes="${src.generated}/*" if:true="@{simple}"/>
+
+                <regexpmapper from="(\w+)\.(?:c(?:c|pp)?|m)$" to="\1.o"/>
+            </apply>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="build">
+        <attribute name="module"/>
+        <attribute name="linker" default="clang"/>
+        <attribute name="lang" default="c"/>
+        <attribute name="flags" default="-Werror -Wfatal-errors"/>
+        <attribute name="simple" default="false"/>
+        <element name="beforeCompile" optional="true"/>
+        <element name="source" optional="true"/>
+        <element name="beforeLink" optional="true"/>
+        <element name="link" optional="true"/>
+        <sequential>
+            <local name="src.main"/>
+            <local name="src.main.rel"/>
+            <local name="src.generated"/>
+            <property name="src.main" location="${module.lwjgl}/@{module}/src/main/c" relative="true"/>
+            <property name="src.main.rel" location="${module.lwjgl.rel}/@{module}/src/main/c" relative="true"/>
+            <property name="src.generated" location="${module.lwjgl}/@{module}/src/generated/c" relative="true"/>
+
+            <local name="name"/>
+            <condition property="name" value="lwjgl" else="lwjgl_@{module}">
+                <equals arg1="@{module}" arg2="core"/>
+            </condition>
+
+            <local name="dest"/>
+            <property name="dest" value="${bin.native}/@{module}"/>
+
+            <beforeCompile/>
+            <compile lang="@{lang}" flags="@{flags}" simple="@{simple}">
+                <source/>
+            </compile>
+
+            <local name="lib-uptodate"/>
+            <uptodate property="lib-uptodate" targetfile="${lib}/lib${name}.dylib">
+                <srcfiles file="config/${platform}/build.xml"/>
+                <srcfiles dir="${dest}" includes="**"/>
+            </uptodate>
+
+            <local name="clang"/>
+            <condition property="clang" value="@{linker}"><not><equals arg1="@{linker}" arg2="clang"/></not></condition>
+            <condition property="clang" value="clang" else="clang++"><equals arg1="@{lang}" arg2="c"/></condition>
+
+            <echo message="Linking ${name}" taskname="${clang}" unless:set="lib-uptodate"/>
+            <beforeLink/>
+            <apply executable="${clang}" failonerror="true" parallel="true" taskname="Linker" unless:set="lib-uptodate">
+                <srcfile/>
+                <arg line='-dynamiclib -Wl,-no_compact_unwind -mmacosx-version-min=${macosx-version-min} -o ${lib}/lib${name}.dylib -O3 -flto -fPIC'/>
+                <fileset dir="${dest}" includes="*.o"/>
+                <link/>
+            </apply>
+
+            <apply executable="strip" failonerror="true" taskname="Symbol strip" unless:set="lib-uptodate">
+                <arg value="-u"/>
+                <arg value="-r"/>
+                <filelist dir="${lib}" files="lib${name}.dylib"/>
+            </apply>
+            <delete file="${lib}/touch_${platform}.txt" quiet="true" unless:set="lib-uptodate"/>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="build_simple">
+        <attribute name="module"/>
+        <sequential>
+            <build module="@{module}" simple="true" if:true="${binding.@{module}}"/>
+        </sequential>
+    </macrodef>
+
+    <target name="compile-native-platform">
+        <echo message="${sdkroot}" taskname="SDK Root"/>
+
+        <parallel threadsPerProcessor="2">
+
+        <!-- CORE -->
+        <build module="core" flags="-Werror -Wfatal-errors -Wall -Wextra -pedantic">
+            <source>
+                <arg value="-I${src.main.rel}/dyncall"/>
+                <fileset dir=".">
+                    <include name="${src.main}/*.c"/>
+                    <include name="${src.generated}/*.c"/>
+                    <include name="${src.generated}/${platform}/*.c"/>
+                    <include name="${module.lwjgl}/jawt/src/generated/c/*.c" if:true="${binding.jawt}"/>
+                </fileset>
+            </source>
+            <beforeLink>
+                <mkdir dir="${lib}/${platform}/${build.arch}"/>
+                <parallel threadsPerProcessor="2" failonany="true" unless:set="lib-uptodate">
+                    <update-dependency name="dyncall" artifact="${build.arch}/libdyncall_s.a"/>
+                    <update-dependency name="dyncallback" artifact="${build.arch}/libdyncallback_s.a"/>
+                    <update-dependency name="dynload" artifact="${build.arch}/libdynload_s.a"/>
+                </parallel>
+            </beforeLink>
+            <link>
+                <arg line="-framework CoreFoundation"/>
+                <fileset dir="${lib}/${platform}/${build.arch}/">
+                    <include name="libdyn*.a"/>
+                </fileset>
+            </link>
+        </build>
+
+        <!-- BULLET -->
+        <build module="bullet" simple="true" linker="clang++" if:true="${binding.bullet}">
+            <beforeLink>
+                <mkdir dir="${lib}/${platform}/${build.arch}/bullet"/>
+                <parallel threadsPerProcessor="2" failonany="true" unless:set="lib-uptodate">
+                    <update-dependency name="Bullet3Common" artifact="${build.arch}/bullet/libBullet3Common.a"/>
+                    <update-dependency name="BulletCollision" artifact="${build.arch}/bullet/libBulletCollision.a"/>
+                    <update-dependency name="BulletDynamics" artifact="${build.arch}/bullet/libBulletDynamics.a"/>
+                    <update-dependency name="BulletFileLoader" artifact="${build.arch}/bullet/libBulletFileLoader.a"/>
+                    <update-dependency name="BulletInverseDynamics" artifact="${build.arch}/bullet/libBulletInverseDynamics.a"/>
+                    <update-dependency name="BulletInverseDynamicsUtils" artifact="${build.arch}/bullet/libBulletInverseDynamicsUtils.a"/>
+                    <update-dependency name="BulletRobotics" artifact="${build.arch}/bullet/libBulletRobotics.a"/>
+                    <update-dependency name="BulletSoftBody" artifact="${build.arch}/bullet/libBulletSoftBody.a"/>
+                    <update-dependency name="BulletWorldImporter" artifact="${build.arch}/bullet/libBulletWorldImporter.a"/>
+                    <update-dependency name="LinearMath" artifact="${build.arch}/bullet/libLinearMath.a"/>
+                </parallel>
+            </beforeLink>
+            <link>
+                <fileset dir="${lib}/${platform}/${build.arch}/bullet">
+                    <include name="*.a"/>
+                </fileset>
+            </link>
+        </build>
+
+        <!-- LIBDIVIDE -->
+        <build_simple module="libdivide"/>
+
+        <!-- LLVM -->
+        <build_simple module="llvm"/>
+
+        <!-- LMDB -->
+        <build module="lmdb" simple="true" if:true="${binding.lmdb}">
+            <beforeCompile>
+                <compile>
+                    <arg value="-I${src.main.rel}"/>
+                    <fileset dir="." includes="${src.main}/*.c"/>
+                </compile>
+            </beforeCompile>
+        </build>
+
+        <!-- LZ4 -->
+        <build module="lz4" simple="true" if:true="${binding.lz4}">
+            <beforeCompile>
+                <compile>
+                    <arg value="-I${src.main.rel}"/>
+                    <arg value="-I${module.lwjgl.rel}/xxhash/src/main/c"/>
+                    <fileset dir="." includes="${src.main}/*.c"/>
+                    <fileset dir="." includes="${module.lwjgl}/xxhash/src/main/c/*.c"/>
+                </compile>
+            </beforeCompile>
+        </build>
+
+        <!-- Meow -->
+        <build module="meow" simple="true" flags="-Werror -Wfatal-errors -maes" if:true="${binding.meow}"/>
+
+        <!-- NanoVG -->
+        <build module="nanovg" simple="true" if:true="${binding.nanovg}">
+            <source>
+                <arg value="-I${module.lwjgl.rel}/stb/src/main/c"/>
+            </source>
+        </build>
+
+        <!-- NativeFileDialog -->
+        <build module="nfd" simple="true" if:true="${binding.nfd}">
+            <source>
+                <arg value="-I${src.main.rel}/include"/>
+                <fileset dir="." includes="${src.main}/nfd_common.c"/>
+                <fileset dir="." includes="${src.main}/nfd_cocoa.m"/>
+            </source>
+            <link>
+                <arg line="-framework AppKit"/>
+            </link>
+        </build>
+
+        <!-- Nuklear -->
+        <build_simple module="nuklear"/>
+
+        <!-- OpenGL -->
+        <build_simple module="opengl"/>
+
+        <!-- OpenGL ES -->
+        <build_simple module="opengles"/>
+
+        <!-- OpenVR -->
+        <build_simple module="openvr"/>
+
+        <!-- ParShapes -->
+        <build_simple module="par"/>
+
+        <!-- Remotery -->
+        <build module="remotery" simple="true" if:true="${binding.remotery}">
+            <link>
+                <arg line="-framework Foundation"/>
+            </link>
+        </build>
+
+        <!-- rpmalloc -->
+        <build_simple module="rpmalloc"/>
+
+        <!-- SSE -->
+        <build_simple module="sse"/>
+
+        <!-- stb -->
+        <build_simple module="stb"/>
+
+        <!-- tinyexr -->
+        <build module="tinyexr" simple="true" linker="clang++" if:true="${binding.tinyexr}">
+            <beforeCompile>
+                <compile lang="c++">
+                    <arg value="-I${src.main.rel}"/>
+                    <fileset dir="." includes="${src.main}/*.cc"/>
+                </compile>
+            </beforeCompile>
+        </build>
+
+        <!-- tiny file dialogs -->
+        <build module="tinyfd" simple="true" if:true="${binding.tinyfd}">
+            <beforeCompile>
+                <compile>
+                    <arg value="-I${src.main.rel}"/>
+                    <fileset dir="." includes="${src.main}/*.c"/>
+                </compile>
+            </beforeCompile>
+        </build>
+
+        <!-- AMD Tootle -->
+        <build module="tootle" lang="c++" if:true="${binding.tootle}">
+            <beforeCompile>
+                <compile flags="-D_SOFTWARE_ONLY_VERSION -D_LINUX">
+                    <arg value="-I${src.main.rel}"/>
+                    <fileset dir="." includes="${src.main}/*.c"/>
+                </compile>
+                <compile lang="c++" flags="-D_SOFTWARE_ONLY_VERSION -D_LINUX">
+                    <arg value="-I${src.main.rel}"/>
+                    <arg value="-I${src.main.rel}/include"/>
+                    <arg value="-I${src.main.rel}/RayTracer"/>
+                    <arg value="-I${src.main.rel}/RayTracer/JRT"/>
+                    <arg value="-I${src.main.rel}/RayTracer/Math"/>
+                    <fileset dir=".">
+                        <include name="${src.main}/*.cpp"/>
+                        <exclude name="${src.main}/d3d*.cpp"/>
+                        <exclude name="${src.main}/gdi*.cpp"/>
+                    </fileset>
+                    <fileset dir="." includes="${src.main}/RayTracer/*.cpp"/>
+                    <fileset dir="." includes="${src.main}/RayTracer/JRT/*.cpp"/>
+                    <fileset dir="." includes="${src.main}/RayTracer/Math/*.cpp"/>
+                </compile>
+            </beforeCompile>
+            <source>
+                <arg value="-D_LINUX"/>
+                <arg value="-I${src.main.rel}/include"/>
+                <fileset dir="." includes="${src.generated}/*.cpp"/>
+            </source>
+        </build>
+
+        <!-- Vulkan Memory Allocator -->
+        <build module="vma" lang="c++" if:true="${binding.vma}">
+            <source>
+                <arg value="-I${src.main.rel}"/>
+                <arg value="-I${module.lwjgl.rel}/vulkan/src/main/c"/>
+                <fileset dir="." includes="${src.generated}/*.cpp"/>
+            </source>
+        </build>
+
+        <!-- xxHash -->
+        <build_simple module="xxhash"/>
+
+        <!-- yoga -->
+        <build module="yoga" simple="true" linker="clang++" if:true="${binding.yoga}">
+            <beforeCompile>
+                <compile lang="c++">
+                    <arg value="-I${src.main.rel}"/>
+                    <fileset dir="." includes="${src.main}/*.cpp"/>
+                </compile>
+            </beforeCompile>
+        </build>
+
+        <!-- zstd -->
+        <build module="zstd" simple="true" if:true="${binding.zstd}">
+            <beforeCompile>
+                <compile flags="-DZSTD_MULTITHREAD">
+                    <arg value="-I${src.main.rel}"/>
+                    <arg value="-I${src.main.rel}/common"/>
+                    <arg value="-I${src.main.rel}/compress"/>
+                    <arg value="-I${src.main.rel}/decompress"/>
+                    <arg value="-I${src.main.rel}/dictBuilder"/>
+                    <arg value="-I${module.lwjgl.rel}/xxhash/src/main/c"/>
+                    <fileset dir="." includes="${src.main}/common/*.c"/>
+                    <fileset dir="." includes="${src.main}/compress/*.c"/>
+                    <fileset dir="." includes="${src.main}/decompress/*.c"/>
+                    <fileset dir="." includes="${src.main}/dictBuilder/*.c"/>
+                    <fileset dir="." includes="${module.lwjgl}/xxhash/src/main/c/*.c"/>
+                </compile>
+            </beforeCompile>
+            <source>
+                <arg value="-I${src.main.rel}/common"/>
+                <arg value="-I${src.main.rel}/dictBuilder"/>
+            </source>
+        </build>
+
+        </parallel>
+
+        <local name="native-dependencies-uptodate"/>
+        <condition property="native-dependencies-uptodate" value="true">
+            <or>
+                <istrue value="${build.offline}"/>
+                <resourceexists>
+                    <file file="${lib}/touch_${platform}.txt"/>
+                </resourceexists>
+            </or>
+        </condition>
+
+        <sequential unless:set="native-dependencies-uptodate">
+            <mkdir dir="${lib}/${platform}/${build.arch}"/>
+
+            <parallel threadsPerProcessor="4" failonany="true">
+
+            <update-dependency name="Assimp" artifact="${build.arch}/libassimp.dylib" dest="${lib}" if:true="${binding.assimp}"/>
+            <update-dependency name="bgfx" artifact="${build.arch}/libbgfx.dylib" dest="${lib}" if:true="${binding.bgfx}"/>
+            <update-dependency name="jemalloc" artifact="${build.arch}/libjemalloc.dylib" dest="${lib}" if:true="${binding.jemalloc}"/>
+            <update-dependency name="GLFW" artifact="${build.arch}/libglfw.dylib" dest="${lib}" if:true="${binding.glfw}"/>
+            <update-dependency name="OpenAL32" artifact="${build.arch}/libopenal.dylib" dest="${lib}" if:true="${binding.openal}"/>
+            <update-dependency name="OpenVR" artifact="${build.arch}/libopenvr_api.dylib" dest="${lib}" if:true="${binding.openvr}"/>
+            <update-dependency name="Opus" artifact="${build.arch}/libopus.dylib" dest="${lib}" if:true="${binding.opus}"/>
+            <update-dependency name="MoltenVK" artifact="${build.arch}/libMoltenVK.dylib" dest="${lib}" if:true="${binding.vulkan}"/>
+
+            </parallel>
+
+            <touch file="${lib}/touch_${platform}.txt" verbose="false"/>
+        </sequential>
+    </target>
+</project>
