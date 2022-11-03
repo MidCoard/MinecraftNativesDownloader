@@ -28,8 +28,9 @@ public class MacosArm64Resolver extends PlatformResolver {
     @Override
     public void resolveBeforeLwjglLink(File lwjgl) throws IOException {
         //use higher version of macos sdk, sprintf is not supported in 10.13
-        //replace it
+        //replace it and make build.xml not automatically generate the new file.
         Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/modules/lwjgl/core/src/generated/c/org_lwjgl_system_libc_LibCStdio.c"), new File(lwjgl, "modules/lwjgl/core/src/generated/c/org_lwjgl_system_libc_LibCStdio.c").toPath(), StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/build.xml"), new File(lwjgl, "build.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
 
         InputStream inputStream = new URL("https://www.dyncall.org/r1.2/dyncall-1.2-darwin-20.2.0-arm64-r.tar.gz").openStream();
         File targetDir = new File(lwjgl, "bin/libs/macos/x64");
@@ -140,13 +141,7 @@ public class MacosArm64Resolver extends PlatformResolver {
         if (target.exists())
             FileUtils.forceDelete(target);
         System.out.println("Build Java-Objective-C-Bridge...");
-        ProcessBuilder processBuilder;
-        Process process;
-        processBuilder = new ProcessBuilder("mvn","package");
-        if (MinecraftNativesDownloader.getDebug() != null)
-            processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
-        else processBuilder.redirectOutput(MinecraftNativesDownloader.getOut()).redirectError(MinecraftNativesDownloader.getOut());
-        process = processBuilder.directory(dir).start();
+        Process process = new ProcessBuilder("mvn","package").redirectOutput(new File(parent, "bridge.txt")).redirectError(new File(parent, "bridge.txt")).directory(dir).start();
         if (process.waitFor() != 0) {
             System.err.println("Java-Objective-C-Bridge: mvn package failed. Please add --no-bridge to skip this step if you don't need it.");
             System.exit(-1);

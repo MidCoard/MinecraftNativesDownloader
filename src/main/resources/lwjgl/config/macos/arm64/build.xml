@@ -142,30 +142,6 @@
             </link>
         </build>
 
-        <!-- BULLET -->
-        <build module="bullet" simple="true" linker="clang++" if:true="${binding.bullet}">
-            <beforeLink>
-                <mkdir dir="${lib}/${platform}/${build.arch}/bullet"/>
-                <parallel threadsPerProcessor="2" failonany="true" unless:set="lib-uptodate">
-                    <update-dependency name="Bullet3Common" artifact="${build.arch}/bullet/libBullet3Common.a"/>
-                    <update-dependency name="BulletCollision" artifact="${build.arch}/bullet/libBulletCollision.a"/>
-                    <update-dependency name="BulletDynamics" artifact="${build.arch}/bullet/libBulletDynamics.a"/>
-                    <update-dependency name="BulletFileLoader" artifact="${build.arch}/bullet/libBulletFileLoader.a"/>
-                    <update-dependency name="BulletInverseDynamics" artifact="${build.arch}/bullet/libBulletInverseDynamics.a"/>
-                    <update-dependency name="BulletInverseDynamicsUtils" artifact="${build.arch}/bullet/libBulletInverseDynamicsUtils.a"/>
-                    <update-dependency name="BulletRobotics" artifact="${build.arch}/bullet/libBulletRobotics.a"/>
-                    <update-dependency name="BulletSoftBody" artifact="${build.arch}/bullet/libBulletSoftBody.a"/>
-                    <update-dependency name="BulletWorldImporter" artifact="${build.arch}/bullet/libBulletWorldImporter.a"/>
-                    <update-dependency name="LinearMath" artifact="${build.arch}/bullet/libLinearMath.a"/>
-                </parallel>
-            </beforeLink>
-            <link>
-                <fileset dir="${lib}/${platform}/${build.arch}/bullet">
-                    <include name="*.a"/>
-                </fileset>
-            </link>
-        </build>
-
         <!-- LIBDIVIDE -->
         <build_simple module="libdivide"/>
 
@@ -193,9 +169,6 @@
                 </compile>
             </beforeCompile>
         </build>
-
-        <!-- Meow -->
-<!--        <build module="meow" simple="true" flags="-Werror -Wfatal-errors -maes" if:true="${binding.meow}"/>-->
 
         <!-- NanoVG -->
         <build module="nanovg" simple="true" if:true="${binding.nanovg}">

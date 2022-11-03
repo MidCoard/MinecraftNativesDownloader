@@ -41,10 +41,6 @@ public class MinecraftNativesDownloader {
 
     private static final AtomicInteger COUNTER = new AtomicInteger(0);
 
-    private static Option debug;
-
-    private static File out;
-
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
         Options options = Options.parse(args,
                 new OptionParserClassifier("path", OptionType.DEFAULT_OPTION_TYPE),
@@ -53,12 +49,10 @@ public class MinecraftNativesDownloader {
                 new OptionParserClassifier("help"),
                 new OptionParserClassifier("ignore-error"),
                 new OptionParserClassifier("no-clean"),
-                new OptionParserClassifier("clean"),
-                new OptionParserClassifier("debug")
+                new OptionParserClassifier("clean")
         );
         Option option = options.get("help");
         Option ignore = options.get("ignore-error");
-        debug = options.get("debug");
         if (option != null) {
             System.out.println("--path <Miencraft Version Path> Generate Minecraft naives by specified Minecraft version path");
             System.out.println("--no-change-mode Do not change mode of building files.");
@@ -91,7 +85,6 @@ public class MinecraftNativesDownloader {
         File jsonFile = new File(file, filename);
         Set<Pair<String, String>> libs = new HashSet<>();
         File parent = new File(file, "build");
-        out = new File(parent, "out.txt");
         if (jsonFile.exists()) {
             System.out.println("Found json file: " + jsonFile.getAbsolutePath());
             option = options.get("clean");
@@ -179,24 +172,14 @@ public class MinecraftNativesDownloader {
                             System.out.println("Before building lwjgl...");
                             platformResolver.resolveBeforeLwjglBuild(lwjgl3);
                             System.out.println("Build lwjgl-" + version + "...");
-                            ProcessBuilder processBuilder;
-                            Process process;
-                            processBuilder = new ProcessBuilder("ant", "compile-templates");
-                            if (debug != null)
-                                processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
-                            else processBuilder.redirectOutput(out).redirectError(out);
-                            process = processBuilder.directory(lwjgl3).start();
+                            Process process = new ProcessBuilder("ant", "compile-templates").redirectOutput(new File(parent, "lwjgl-compile-templates.txt")).redirectError(new File(parent, "lwjgl-compile-templates.txt")).directory(lwjgl3).start();
                             if (process.waitFor() != 0) {
                                 System.err.println("LWJGL compile templates failed. Please check the error above.");
                                 System.exit(-1);
                             }
                             System.out.println("Before linking lwjgl...");
                             platformResolver.resolveBeforeLwjglLink(lwjgl3);
-                            processBuilder = new ProcessBuilder("ant", "compile-native");
-                            if (debug != null)
-                                processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
-                            else processBuilder.redirectOutput(out).redirectError(out);
-                            process = processBuilder.directory(lwjgl3).start();
+                            process = new ProcessBuilder("ant", "compile-native").redirectOutput(new File(parent, "lwjgl-compile-native.txt")).redirectError(new File(parent, "lwjgl-compile-native.txt")).directory(lwjgl3).start();
                             if (process.waitFor() != 0 && ignore == null) {
                                 System.err.println("LWJGL compile native failed. Please add --ignore-error to ignore this error if this is a known error.");
                                 System.exit(-1);
@@ -229,34 +212,21 @@ public class MinecraftNativesDownloader {
                         ZipUtil.unzip(inputStream, parent);
                         // to avoid write or read permission denied
                         Option o = options.get("no-change-mode");
-                        ProcessBuilder processBuilder;
                         Process process;
                         if (o == null) {
-                            processBuilder = new ProcessBuilder("chmod", "-R", "777", ".");
-                            if (debug != null)
-                                processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
-                            else processBuilder.redirectOutput(out).redirectError(out);
-                            process = processBuilder.directory(jmalloc).start();
+                            process = new ProcessBuilder("chmod", "-R", "777", ".").redirectOutput(new File(parent, "jemalloc-chmod.txt")).redirectError(new File(parent, "jemalloc-chmod.txt")).directory(jmalloc).start();
                             if (process.waitFor() != 0) {
                                 System.err.println("jemalloc: change mode of * failed. Please add --no-change-mode if there is no permission problem.");
                                 System.exit(-1);
                             }
                         }
                         System.out.println("Build jemalloc...");
-                        processBuilder = new ProcessBuilder("./autogen.sh");
-                        if (debug != null)
-                            processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
-                        else processBuilder.redirectOutput(out).redirectError(out);
-                        process = processBuilder.directory(jmalloc).start();
+                        process = new ProcessBuilder("./autogen.sh").redirectOutput(new File(parent, "jemalloc-configure.txt")).redirectError(new File(parent, "jemalloc-configure.txt")).directory(jmalloc).start();
                         if (process.waitFor() != 0) {
                             System.err.println("jemalloc: autogen failed. Please check the error above.");
                             System.exit(-1);
                         }
-                        processBuilder = new ProcessBuilder("make");
-                        if (debug != null)
-                            processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
-                        else processBuilder.redirectOutput(out).redirectError(out);
-                        process = processBuilder.directory(jmalloc).start();
+                        process = new ProcessBuilder("make").redirectOutput(new File(parent, "jemalloc-make.txt")).redirectError(new File(parent, "jemalloc-make.txt")).directory(jmalloc).start();
                         if (process.waitFor() != 0 && ignore == null) {
                             System.err.println("jemalloc: make failed. Please add --ignore-error to ignore this error if this is a known error.");
                             System.exit(-1);
@@ -279,22 +249,12 @@ public class MinecraftNativesDownloader {
                             FileUtils.forceDelete(buildFile);
                         buildFile.mkdirs();
                         System.out.println("Build openal-soft...");
-                        ProcessBuilder processBuilder;
-                        Process process;
-                        processBuilder = new ProcessBuilder("cmake", "..");
-                        if (debug != null)
-                            processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
-                        else processBuilder.redirectOutput(out).redirectError(out);
-                        process = processBuilder.directory(buildFile).start();
+                        Process process = new ProcessBuilder("cmake", "..").redirectOutput(new File(parent, "openal-cmake.txt")).redirectError(new File(parent, "openal-cmake.txt")).directory(buildFile).start();
                         if (process.waitFor() != 0) {
                             System.err.println("openal: cmake failed. Please check the error above.");
                             System.exit(-1);
                         }
-                        processBuilder = new ProcessBuilder("make");
-                        if (debug != null)
-                            processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
-                        else processBuilder.redirectOutput(out).redirectError(out);
-                        process = processBuilder.directory(buildFile).start();
+                        process = new ProcessBuilder("make").redirectOutput(new File(parent, "openal-make.txt")).redirectError(new File(parent, "openal-make.txt")).directory(buildFile).start();
                         if (process.waitFor() != 0 && ignore == null) {
                             System.err.println("openal: make failed. Please add --ignore-error to ignore this error if this is a known error.");
                             System.exit(-1);
@@ -326,7 +286,6 @@ public class MinecraftNativesDownloader {
                 for (File f : parent.listFiles())
                     if (!f.getName().equals("natives"))
                         FileUtils.forceDelete(f);
-                out.delete();
             }
             System.out.println("Finish");
         } else {
@@ -341,12 +300,4 @@ public class MinecraftNativesDownloader {
         return false;
     }
 
-
-    public static Option getDebug() {
-        return debug;
-    }
-
-    public static File getOut() {
-        return out;
-    }
 }
