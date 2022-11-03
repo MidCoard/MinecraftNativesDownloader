@@ -96,8 +96,8 @@ public class MacosArm64Resolver extends PlatformResolver {
                     if (dylib != null && !target.exists())
                         Files.copy(dylib.toPath(), target.toPath());
                 } else if (file.getName().contains("Bridge")) {
-                    File dylib = find(new File(file, "target/classes"), "dylib");
-                    File target = new File(natives, "libjcocoa.dylib");
+                    File dylib = find(new File(file, "target"), "jar");
+                    File target = new File(natives, "jocb.jar");
                     if (dylib != null && !target.exists())
                         Files.copy(dylib.toPath(), target.toPath());
                 }
@@ -126,15 +126,7 @@ public class MacosArm64Resolver extends PlatformResolver {
 
     @Override
     public void resolveBeforeLwjglBuild(File lwjgl) throws IOException {
-        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/update-dependencies.xml"), new File(lwjgl, "update-dependencies.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
         Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/build-definitions.xml"), new File(lwjgl, "config/build-definitions.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
         Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/macos/arm64/build.xml"), new File(lwjgl, "config/macos/build.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
-        File file = new File(lwjgl, "modules/generator/src/main/java/org/lwjgl/system/ExcludeDoclet.java");
-        if (file.exists())
-            Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/modules/generator/src/main/java/org/lwjgl/system/ExcludeDoclet.java"), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        file = new File(lwjgl, "modules/lwjgl/core/src/main/kotlin/core/macos/templates/CoreFoundation.kt");
-        if (file.exists())
-            Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/modules/lwjgl/core/src/main/kotlin/core/macos/templates/CoreFoundation.kt"), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-
     }
 }

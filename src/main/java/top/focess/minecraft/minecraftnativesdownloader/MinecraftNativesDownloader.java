@@ -54,7 +54,8 @@ public class MinecraftNativesDownloader {
                 new OptionParserClassifier("ignore-glfw"),
                 new OptionParserClassifier("ignore-jemalloc"),
                 new OptionParserClassifier("ignore-openal"),
-                new OptionParserClassifier("ignore-compile-templates")
+                new OptionParserClassifier("ignore-compile-templates"),
+                new OptionParserClassifier("build-lwjgl")
         );
         Option option = options.get("help");
         Option ignore = options.get("ignore-error");
@@ -63,6 +64,7 @@ public class MinecraftNativesDownloader {
         Option ignoreJemalloc = options.get("ignore-jemalloc");
         Option ignoreOpenal = options.get("ignore-openal");
         Option ignoreCompileTemplates = options.get("ignore-compile-templates");
+        Option buildLwjgl = options.get("build-lwjgl");
         if (option != null) {
             System.out.println("--path <Miencraft Version Path> Generate Minecraft naives by specified Minecraft version path");
             System.out.println("--no-change-mode Do not change mode of building files.");
@@ -77,6 +79,7 @@ public class MinecraftNativesDownloader {
             System.out.println("--ignore-jemalloc Ignore building jemalloc");
             System.out.println("--ignore-openal Ignore building openal");
             System.out.println("--ignore-compile-templates Ignore compile-templates in building lwjgl");
+            System.out.println("--build-lwjgl Only build lwjgl");
             return;
         }
         Platform platform = Platform.parse(System.getProperty("os.name"));
@@ -222,7 +225,7 @@ public class MinecraftNativesDownloader {
                         versions.add(version);
                     }
                 }
-            if (ignoreGlfw == null && find(builtLibs, "lwjgl-glfw"))
+            if (buildLwjgl == null && ignoreGlfw == null && find(builtLibs, "lwjgl-glfw"))
                 TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
                     try {
                         System.out.println("Download glfw...");
@@ -233,7 +236,7 @@ public class MinecraftNativesDownloader {
                         System.exit(-1);
                     }
                 }));
-            if (ignoreJemalloc == null && find(builtLibs, "lwjgl-jemalloc"))
+            if (buildLwjgl == null && ignoreJemalloc == null && find(builtLibs, "lwjgl-jemalloc"))
                 TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
                     try {
                         System.out.println("Download jemalloc...");
@@ -267,7 +270,7 @@ public class MinecraftNativesDownloader {
                         System.exit(-1);
                     }
                 }));
-            if (ignoreOpenal == null && find(builtLibs, "lwjgl-openal"))
+            if (buildLwjgl == null && ignoreOpenal == null && find(builtLibs, "lwjgl-openal"))
                 TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
                     try {
                         System.out.println("Download openal...");
@@ -296,7 +299,7 @@ public class MinecraftNativesDownloader {
                     }
                 }));
             option = options.get("bridge");
-            if (option != null)
+            if (buildLwjgl == null && option != null)
                 TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
                     try {
                         platformResolver.resolveBridge(parent);

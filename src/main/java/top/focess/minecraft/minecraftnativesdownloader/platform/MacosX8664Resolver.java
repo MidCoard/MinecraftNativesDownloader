@@ -25,8 +25,8 @@ public class MacosX8664Resolver extends PlatformResolver{
         for (File file : parent.listFiles()) {
             if (file.isDirectory()) {
                 if (file.getName().contains("Bridge")) {
-                    File dylib = find(new File(file, "target/classes"), "dylib");
-                    File target = new File(natives, "libjcocoa.dylib");
+                    File dylib = find(new File(file, "target"), "jar");
+                    File target = new File(natives, "jocb.jar");
                     if (dylib != null && !target.exists())
                         Files.copy(dylib.toPath(), target.toPath());
                 }

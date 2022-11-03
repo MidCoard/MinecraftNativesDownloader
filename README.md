@@ -11,6 +11,11 @@ As other platforms like Linux and Windows, there is no Rosetta 2 with their arm6
 
 # Usage
 
+
+## Requirements
+
+arm64 Java 11
+
 todo
 
 # Screenshots
@@ -48,7 +53,7 @@ The above table shows the supported Minecraft versions, which are tested.
 If you have tested other versions, please tell me through issues.
 
 - 1.18.2
-- 
+- 1.13.2
 
 # Contribution
 
