@@ -72,26 +72,38 @@ public class MacosArm64Resolver extends PlatformResolver {
             if (file.isDirectory()) {
                 if (file.getName().contains("glfw")) {
                     File dylib = find(new File(file, "lib-arm64"), "dylib");
-                    if (dylib != null)
-                        Files.copy(dylib.toPath(),new File(natives, "libglfw.dylib").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    File target = new File(natives, "libglfw.dylib");
+                    if (dylib != null && !target.exists())
+                        Files.copy(dylib.toPath(),target.toPath());
                 } else if (file.getName().contains("lwjgl")) {
                     File dir = new File(file, "bin/libs");
-                    Files.copy(new File(dir, "liblwjgl.dylib").toPath(), new File(natives, "liblwjgl.dylib").toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    Files.copy(new File(dir, "liblwjgl_opengl.dylib").toPath(), new File(natives, "liblwjgl_opengl.dylib").toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    Files.copy(new File(dir, "liblwjgl_stb.dylib").toPath(), new File(natives, "liblwjgl_stb.dylib").toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    Files.copy(new File(dir, "liblwjgl_tinyfd.dylib").toPath(), new File(natives, "liblwjgl_tinyfd.dylib").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    File lwjgl = new File(natives, "liblwjgl.dylib");
+                    File opengl = new File(natives, "liblwjgl_opengl.dylib");
+                    File stb = new File(natives, "liblwjgl_stb.dylib");
+                    File tinyfd = new File(natives, "liblwjgl_tinyfd.dylib");
+                    if (!lwjgl.exists())
+                        Files.copy(new File(dir, "liblwjgl.dylib").toPath(), lwjgl.toPath());
+                    if (!opengl.exists())
+                        Files.copy(new File(dir, "liblwjgl_opengl.dylib").toPath(), opengl.toPath());
+                    if (!stb.exists())
+                        Files.copy(new File(dir, "liblwjgl_stb.dylib").toPath(), stb.toPath());
+                    if (!tinyfd.exists())
+                        Files.copy(new File(dir, "liblwjgl_tinyfd.dylib").toPath(), tinyfd.toPath());
                 } else if (file.getName().contains("jemalloc")) {
                     File dylib = find(new File(file, "lib"), "dylib");
-                    if (dylib != null)
-                        Files.copy(dylib.toPath(),new File(natives, "libjemalloc.dylib").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    File target = new File(natives, "libjemalloc.dylib");
+                    if (dylib != null && !target.exists())
+                        Files.copy(dylib.toPath(), target.toPath());
                 } else if (file.getName().contains("openal")) {
                     File dylib = find(new File(file, "build"), "dylib");
-                    if (dylib != null)
-                        Files.copy(dylib.toPath(),new File(natives, "libopenal.dylib").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    File target = new File(natives, "libopenal.dylib");
+                    if (dylib != null && !target.exists())
+                        Files.copy(dylib.toPath(), target.toPath());
                 } else if (file.getName().contains("Bridge")) {
                     File dylib = find(new File(file, "target/classes"), "dylib");
-                    if (dylib != null)
-                        Files.copy(dylib.toPath(),new File(natives, "libjcocoa.dylib").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    File target = new File(natives, "libjcocoa.dylib");
+                    if (dylib != null && !target.exists())
+                        Files.copy(dylib.toPath(), target.toPath());
                 }
             }
         }

@@ -32,7 +32,7 @@ public class MCLWJGLNativesDownloader {
 
     private static final String LWJGL_SOURCE_URL = "https://github.com/LWJGL/lwjgl3/archive/refs/tags/";
 
-    private static final ThreadPoolScheduler THREAD_POOL_SCHEDULER = new ThreadPoolScheduler(10, false, "MinecraftNativesDownloader");
+    private static final ThreadPoolScheduler THREAD_POOL_SCHEDULER = new ThreadPoolScheduler(10, false, "MinecraftNativesDownloader", true);
 
     private static final List<Task> TASKS = new ArrayList<>();
 
@@ -59,9 +59,9 @@ public class MCLWJGLNativesDownloader {
         Scanner scanner = new Scanner(System.in);
         if (arch != Architecture.ARM64) {
             System.err.println("Architecture of your computer is not ARM64. If this is want you want, you can ignore this error.");
-            System.out.println("But if your computer is ARM64, please make sure you are using ARM64 Java.");
+            System.err.println("But if your computer is ARM64, please make sure you are using ARM64 Java.");
             System.err.println("Please enter 'ENTER' key to continue.");
-            scanner.next();
+            scanner.nextLine();
         }
         option = options.get("path");
         String path = System.getProperty("user.dir");
@@ -229,6 +229,7 @@ public class MCLWJGLNativesDownloader {
                     Option o = options.get("no-bridge");
                     if (o == null)
                         platformResolver.resolveBridge(parent);
+                    System.out.println("Finish " + COUNTER.incrementAndGet() + "/" + TASKS.size());
                 } catch (Exception e) {
                     e.printStackTrace();
                     System.exit(-1);
