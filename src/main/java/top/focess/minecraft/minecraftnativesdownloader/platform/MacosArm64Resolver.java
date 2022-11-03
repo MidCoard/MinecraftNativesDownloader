@@ -26,10 +26,7 @@ public class MacosArm64Resolver extends PlatformResolver {
 
 
     @Override
-    public void resolveBeforeLink(File lwjgl) throws IOException {
-        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/build-definitions.xml"), new File(lwjgl, "config/build-definitions.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
-        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/macos/arm64/build.xml"), new File(lwjgl, "config/macos/build.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
-
+    public void resolveBeforeLwjglLink(File lwjgl) throws IOException {
         //use higher version of macos sdk, sprintf is not supported in 10.13
         //replace it
         Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/modules/lwjgl/core/src/generated/c/org_lwjgl_system_libc_LibCStdio.c"), new File(lwjgl, "modules/lwjgl/core/src/generated/c/org_lwjgl_system_libc_LibCStdio.c").toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -153,5 +150,11 @@ public class MacosArm64Resolver extends PlatformResolver {
             System.err.println("Java-Objective-C-Bridge: mvn package failed. Please add --no-bridge to skip this step if you don't need it.");
             System.exit(-1);
         }
+    }
+
+    @Override
+    public void resolveBeforeLwjglBuild(File lwjgl) throws IOException {
+        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/build-definitions.xml"), new File(lwjgl, "config/build-definitions.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/macos/arm64/build.xml"), new File(lwjgl, "config/macos/build.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 }

@@ -173,6 +173,8 @@ public class MinecraftNativesDownloader {
                                 ZipUtil.unzip(inputStream, parent);
                             }
                             File lwjgl3 = new File(parent, "lwjgl3-" + version);
+                            System.out.println("Before building lwjgl...");
+                            platformResolver.resolveBeforeLwjglBuild(lwjgl3);
                             System.out.println("Build lwjgl-" + version + "...");
                             ProcessBuilder processBuilder;
                             Process process;
@@ -185,7 +187,7 @@ public class MinecraftNativesDownloader {
                                 System.exit(-1);
                             }
                             System.out.println("Before linking lwjgl...");
-                            platformResolver.resolveBeforeLink(lwjgl3);
+                            platformResolver.resolveBeforeLwjglLink(lwjgl3);
                             processBuilder = new ProcessBuilder("ant", "compile-native");
                             if (debug != null)
                                 processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);

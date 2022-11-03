@@ -21,7 +21,7 @@ public abstract class PlatformResolver {
         return PLATFORM_RESOLVER_MAP.getOrDefault(Pair.of(platform, architecture),EmptyPlatformResolver::new).get();
     }
 
-    public abstract void resolveBeforeLink(File lwjgl) throws IOException;
+    public abstract void resolveBeforeLwjglLink(File lwjgl) throws IOException;
 
     public abstract void resolveDownloadGLFW(File parent) throws IOException;
 
@@ -29,10 +29,12 @@ public abstract class PlatformResolver {
 
     public abstract void resolveBridge(File parent) throws IOException, InterruptedException;
 
+    public abstract void resolveBeforeLwjglBuild(File lwjgl) throws IOException;
+
     public static class EmptyPlatformResolver extends PlatformResolver {
 
         @Override
-        public void resolveBeforeLink(File lwjgl) {
+        public void resolveBeforeLwjglLink(File lwjgl) {
 
         }
 
@@ -48,6 +50,11 @@ public abstract class PlatformResolver {
 
         @Override
         public void resolveBridge(File parent) {
+
+        }
+
+        @Override
+        public void resolveBeforeLwjglBuild(File lwjgl) {
 
         }
     }
