@@ -118,7 +118,7 @@ public class MinecraftNativesDownloader {
                 String group = arguments[0];
                 String type = arguments[1];
                 String version = arguments[2];
-                if (group.equals("org.lwjgl")) {
+                if (group.equals("org.lwjgl") && ((JSON)library).contains("rules")) {
                     JSONList rules = library.getList("rules");
                     boolean allowed = true;
                     for (JSONObject object : rules) {

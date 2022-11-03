@@ -21,13 +21,14 @@ Platforms with the unsupported architecture such as **Windows arm64** or **Linux
 
 # Supported Platform
 
-|        | Windows | Linux | MACOS |
-|:------:|:-------:|:-----:|:-----:|
-|  X86   |    -    |   -   |   ✅   |
-| X86_64 |    -    |   -   |   ❌   |
-| arm64  |    ❌    |   ❌   |   ✅   |
+|        | Windows | Linux | Macos  |
+|:------:|:-------:|:-----:|:------:|
+|  X86   |    -    |   -   |   ✅    |
+| X86_64 |    -    |   -   |   ❌❌   |
+| arm64  |    ❌    |   ❌   |   ✅    |
 
-❌ means not supported, ✅ means supported, - means not tested or not matter.
+❌❌ means not planned,
+❌ means not supported , ✅ means supported, - means not tested or not matter.
 
 # License
 
