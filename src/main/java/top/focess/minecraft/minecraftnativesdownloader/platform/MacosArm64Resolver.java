@@ -3,6 +3,7 @@ package top.focess.minecraft.minecraftnativesdownloader.platform;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.FileUtils;
+import top.focess.minecraft.minecraftnativesdownloader.MinecraftNativesDownloader;
 import top.focess.minecraft.minecraftnativesdownloader.util.ZipUtil;
 import top.focess.util.json.JSON;
 import top.focess.util.json.JSONList;
@@ -25,19 +26,16 @@ public class MacosArm64Resolver extends PlatformResolver {
 
 
     @Override
-    public void resolvePrebuild(File parent) throws IOException {
-        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/build-definitions.xml"), new File(parent, "config/build-definitions.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
-        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/macos/arm64/build.xml"), new File(parent, "config/macos/build.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
+    public void resolvePrebuildLwjgl(File lwjgl) throws IOException {
+        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/build-definitions.xml"), new File(lwjgl, "config/build-definitions.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/macos/arm64/build.xml"), new File(lwjgl, "config/macos/build.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
 
         //use higher version of macos sdk, sprintf is not supported in 10.13
         //replace it
-        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/modules/lwjgl/core/src/generated/c/org_lwjgl_system_libc_LibCStdio.c"), new File(parent, "modules/lwjgl/core/src/generated/c/org_lwjgl_system_libc_LibCStdio.c").toPath(), StandardCopyOption.REPLACE_EXISTING);
-    }
+        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/modules/lwjgl/core/src/generated/c/org_lwjgl_system_libc_LibCStdio.c"), new File(lwjgl, "modules/lwjgl/core/src/generated/c/org_lwjgl_system_libc_LibCStdio.c").toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-    @Override
-    public void resolvePredownload(File parent) throws IOException {
         InputStream inputStream = new URL("https://www.dyncall.org/r1.2/dyncall-1.2-darwin-20.2.0-arm64-r.tar.gz").openStream();
-        File targetDir = new File(parent, "bin/libs/macos/x64");
+        File targetDir = new File(lwjgl, "bin/libs/macos/x64");
         targetDir.mkdirs();
         GZIPInputStream gzipInputStream = new GZIPInputStream(inputStream);
         try(TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(gzipInputStream)) {
@@ -145,7 +143,12 @@ public class MacosArm64Resolver extends PlatformResolver {
         if (target.exists())
             FileUtils.forceDelete(target);
         System.out.println("Build Java-Objective-C-Bridge...");
-        Process process = new ProcessBuilder("mvn","package").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(dir).start();
+        ProcessBuilder processBuilder;
+        Process process;
+        processBuilder = new ProcessBuilder("mvn","package");
+        if (MinecraftNativesDownloader.getDebug() != null)
+            processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
+        process = processBuilder.directory(dir).start();
         if (process.waitFor() != 0) {
             System.err.println("Java-Objective-C-Bridge: mvn package failed. Please add --no-bridge to skip this step if you don't need it.");
             System.exit(-1);
