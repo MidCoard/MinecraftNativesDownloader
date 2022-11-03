@@ -209,6 +209,7 @@ public class MinecraftNativesDownloader {
             if (ignoreGlfw == null && find(builtLibs, "lwjgl-glfw"))
                 TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
                     try {
+                        System.out.println("Download glfw...");
                         platformResolver.resolveDownloadGlfw(parent);
                         System.out.println("Finish building glfw " + COUNTER.incrementAndGet() + "/" + TASKS.size());
                     } catch (IOException e) {
@@ -253,7 +254,7 @@ public class MinecraftNativesDownloader {
             if (ignoreOpenal == null && find(builtLibs, "lwjgl-openal"))
                 TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
                     try {
-                        System.out.println("Download openal-soft...");
+                        System.out.println("Download openal...");
                         InputStream inputStream = new URL("https://github.com/kcat/openal-soft/archive/refs/heads/master.zip").openStream();
                         File openal = new File(parent, "openal-soft-master");
                         ZipUtil.unzip(inputStream, parent);
