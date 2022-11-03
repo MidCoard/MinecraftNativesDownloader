@@ -22,8 +22,8 @@ public class MacosArm64Resolver extends PlatformResolver {
 
     @Override
     public void resolvePrebuild(File parent) throws IOException {
-        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("config/build-definitions.xml"), new File(parent, "config/build-definitions.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
-        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("config/macos/arm64/build.xml"), new File(parent, "config/macos/build.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/build-definitions.xml"), new File(parent, "config/build-definitions.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/macos/arm64/build.xml"), new File(parent, "config/macos/build.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
     @Override
@@ -67,11 +67,14 @@ public class MacosArm64Resolver extends PlatformResolver {
 
     @Override
     public void resolveBridge(File parent) throws IOException,InterruptedException {
-        InputStream inputStream = new URL("https://github.com/shannah/Java-Objective-C-Bridge/archive/refs/heads/master.zip").openStream();
-        ZipUtil.unzip(inputStream, parent);
-        Process process = new ProcessBuilder("mvn","package").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(new File(parent,"Java-Objective-C-Bridge-master")).start();
+        File dir = new File(parent, "Java-Objective-C-Bridge-master");
+        if (!dir.exists()) {
+            InputStream inputStream = new URL("https://github.com/shannah/Java-Objective-C-Bridge/archive/refs/heads/master.zip").openStream();
+            ZipUtil.unzip(inputStream, parent);
+        }
+        Process process = new ProcessBuilder("mvn","package").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(dir).start();
         if (process.waitFor() != 0) {
-            System.err.println("Build Java-Objective-C-Bridge failed!");
+            System.err.println("Java-Objective-C-Bridge: mvn package failed. Please add --no-bridge to skip this step if you don't need it.");
 //            System.exit(-1);
         }
     }
