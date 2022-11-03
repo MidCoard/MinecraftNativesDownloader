@@ -2,6 +2,7 @@ package top.focess.minecraft.mclwjglnativesdownloader.platform;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.io.FileUtils;
 import top.focess.minecraft.mclwjglnativesdownloader.util.ZipUtil;
 import top.focess.util.json.JSON;
 import top.focess.util.json.JSONList;
@@ -14,6 +15,9 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
@@ -80,17 +84,36 @@ public class MacosArm64Resolver extends PlatformResolver {
                     File dylib = find(new File(file, "lib"), "dylib");
                     if (dylib != null)
                         Files.copy(dylib.toPath(),new File(natives, "libjemalloc.dylib").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                } else if (file.getName().contains("openal")) {
+                    File dylib = find(new File(file, "build"), "dylib");
+                    if (dylib != null)
+                        Files.copy(dylib.toPath(),new File(natives, "libopenal.dylib").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                } else if (file.getName().contains("Bridge")) {
+                    File dylib = find(new File(file, "target/classes"), "dylib");
+                    if (dylib != null)
+                        Files.copy(dylib.toPath(),new File(natives, "libjcocoa.dylib").toPath(), StandardCopyOption.REPLACE_EXISTING);
                 }
             }
         }
     }
 
-    private File find(File file, String suffix) {
+    private static long size(File file) {
+        try {
+            return Files.size(file.toPath());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static File find(File file, String suffix) {
+        List<File> files = new ArrayList<>();
         if (file.isDirectory())
             for (File f : file.listFiles())
                 if (f.getName().endsWith("." + suffix))
-                    return f;
-        return null;
+                    files.add(f);
+        if (files.size() == 0)
+            return null;
+        else return files.stream().max(Comparator.comparingLong(MacosArm64Resolver::size)).orElse(null);
     }
 
     @Override
@@ -100,6 +123,9 @@ public class MacosArm64Resolver extends PlatformResolver {
             InputStream inputStream = new URL("https://github.com/shannah/Java-Objective-C-Bridge/archive/refs/heads/master.zip").openStream();
             ZipUtil.unzip(inputStream, parent);
         }
+        File target = new File(dir, "target");
+        if (target.exists())
+            FileUtils.forceDelete(target);
         Process process = new ProcessBuilder("mvn","package").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(dir).start();
         if (process.waitFor() != 0) {
             System.err.println("Java-Objective-C-Bridge: mvn package failed. Please add --no-bridge to skip this step if you don't need it.");
