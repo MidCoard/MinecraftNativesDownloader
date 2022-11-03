@@ -1,4 +1,4 @@
-package top.focess.minecraft.mclwjglnativesdownloader.util;
+package top.focess.minecraft.minecraftnativesdownloader.util;
 
 import java.io.File;
 import java.io.IOException;

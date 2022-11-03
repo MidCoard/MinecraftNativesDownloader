@@ -1,10 +1,10 @@
-package top.focess.minecraft.mclwjglnativesdownloader;
+package top.focess.minecraft.minecraftnativesdownloader;
 
 import org.apache.commons.io.FileUtils;
-import top.focess.minecraft.mclwjglnativesdownloader.platform.Architecture;
-import top.focess.minecraft.mclwjglnativesdownloader.platform.Platform;
-import top.focess.minecraft.mclwjglnativesdownloader.platform.PlatformResolver;
-import top.focess.minecraft.mclwjglnativesdownloader.util.ZipUtil;
+import top.focess.minecraft.minecraftnativesdownloader.platform.Architecture;
+import top.focess.minecraft.minecraftnativesdownloader.platform.Platform;
+import top.focess.minecraft.minecraftnativesdownloader.platform.PlatformResolver;
+import top.focess.minecraft.minecraftnativesdownloader.util.ZipUtil;
 import top.focess.scheduler.Task;
 import top.focess.scheduler.ThreadPoolScheduler;
 import top.focess.util.Pair;

@@ -1,4 +1,4 @@
-package top.focess.minecraft.mclwjglnativesdownloader.platform;
+package top.focess.minecraft.minecraftnativesdownloader.platform;
 
 import top.focess.util.Pair;
 

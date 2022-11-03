@@ -1,9 +1,9 @@
-package top.focess.minecraft.mclwjglnativesdownloader.platform;
+package top.focess.minecraft.minecraftnativesdownloader.platform;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.FileUtils;
-import top.focess.minecraft.mclwjglnativesdownloader.util.ZipUtil;
+import top.focess.minecraft.minecraftnativesdownloader.util.ZipUtil;
 import top.focess.util.json.JSON;
 import top.focess.util.json.JSONList;
 import top.focess.util.json.JSONObject;
