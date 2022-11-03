@@ -143,7 +143,7 @@ public class MacosArm64Resolver extends PlatformResolver {
         System.out.println("Build Java-Objective-C-Bridge...");
         Process process = new ProcessBuilder("mvn","package").redirectOutput(new File(parent, "bridge.txt")).redirectError(new File(parent, "bridge.txt")).directory(dir).start();
         if (process.waitFor() != 0) {
-            System.err.println("Java-Objective-C-Bridge: mvn package failed. Please add --no-bridge to skip this step if you don't need it.");
+            System.err.println("Java-Objective-C-Bridge: mvn package failed. Please check the error above.");
             System.exit(-1);
         }
     }

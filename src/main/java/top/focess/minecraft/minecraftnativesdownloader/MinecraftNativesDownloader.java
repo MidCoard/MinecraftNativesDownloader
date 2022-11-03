@@ -59,7 +59,7 @@ public class MinecraftNativesDownloader {
         Option ignore = options.get("ignore-error");
         Option ignoreLwjgl = options.get("ignore-lwjgl");
         Option ignoreGlfw = options.get("ignore-glfw");
-        Option ignoreJemalloc = options.get("ignore-Jemalloc");
+        Option ignoreJemalloc = options.get("ignore-jemalloc");
         Option ignoreOpenal = options.get("ignore-openal");
         if (option != null) {
             System.out.println("--path <Miencraft Version Path> Generate Minecraft naives by specified Minecraft version path");
