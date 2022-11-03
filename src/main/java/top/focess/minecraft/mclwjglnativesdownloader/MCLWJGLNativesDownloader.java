@@ -22,9 +22,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.jar.JarEntry;
+import java.util.jar.JarInputStream;
 
 public class MCLWJGLNativesDownloader {
 
@@ -77,8 +80,8 @@ public class MCLWJGLNativesDownloader {
             System.out.println("Found json file: " + jsonFile.getAbsolutePath());
             option = options.get("clean");
             if (option != null) {
-                File natives = new File(parent, "natives");
-                FileUtils.forceDelete(natives);
+                for (File f : parent.listFiles())
+                    FileUtils.forceDelete(f);
                 return;
             }
             JSONObject json = JSON.parse(Files.readString(jsonFile.toPath()));
@@ -117,6 +120,17 @@ public class MCLWJGLNativesDownloader {
                 System.out.println("Download " + url);
                 try {
                     InputStream inputStream = new URL(url).openStream();
+                    try (JarInputStream jarInputStream = new JarInputStream(inputStream)) {
+                        JarEntry entry;
+                        while ((entry = jarInputStream.getNextJarEntry()) != null) {
+                            String name = entry.getName().substring(entry.getName().lastIndexOf(File.separatorChar) + 1);
+                            if (name.endsWith(".dylib")) {
+                                File newFile = new File(new File(parent, "natives"), name);
+                                Files.copy(jarInputStream, newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                            }
+                        }
+                        jarInputStream.closeEntry();
+                    }
                 } catch (FileNotFoundException e) {
                     builtLibs.add(lib);
                 } catch (Exception e) {
