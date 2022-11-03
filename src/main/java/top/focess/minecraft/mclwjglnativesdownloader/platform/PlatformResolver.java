@@ -22,9 +22,15 @@ public abstract class PlatformResolver {
         return PLATFORM_RESOLVER_MAP.getOrDefault(Pair.of(platform, architecture),EmptyPlatformResolver::new).get();
     }
 
-    public abstract void resolvePrebuild(File lwjgl3) throws IOException;
+    public abstract void resolvePrebuild(File parent) throws IOException;
 
-    public abstract void resolvePredownload(File lwjgl3) throws IOException;
+    public abstract void resolvePredownload(File parent) throws IOException;
+
+    public abstract void resolveDownloadGLFW(File parent) throws IOException;
+
+    public abstract void resolveMove(File parent);
+
+    public abstract void resolveBridge(File parent) throws IOException, InterruptedException;
 
     public static class EmptyPlatformResolver extends PlatformResolver {
 
@@ -35,6 +41,21 @@ public abstract class PlatformResolver {
 
         @Override
         public void resolvePredownload(File lwjgl3) {
+
+        }
+
+        @Override
+        public void resolveDownloadGLFW(File lwjgl3) {
+
+        }
+
+        @Override
+        public void resolveMove(File parent) {
+
+        }
+
+        @Override
+        public void resolveBridge(File parent) throws IOException {
 
         }
     }

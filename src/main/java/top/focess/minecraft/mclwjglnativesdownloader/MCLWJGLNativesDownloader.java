@@ -3,6 +3,7 @@ package top.focess.minecraft.mclwjglnativesdownloader;
 import top.focess.minecraft.mclwjglnativesdownloader.platform.Architecture;
 import top.focess.minecraft.mclwjglnativesdownloader.platform.Platform;
 import top.focess.minecraft.mclwjglnativesdownloader.platform.PlatformResolver;
+import top.focess.minecraft.mclwjglnativesdownloader.util.ZipUtil;
 import top.focess.util.Pair;
 import top.focess.util.json.JSON;
 import top.focess.util.json.JSONList;
@@ -17,13 +18,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 public class MCLWJGLNativesDownloader {
 
@@ -53,6 +49,7 @@ public class MCLWJGLNativesDownloader {
         String filename = file.getName() + ".json";
         File jsonFile = new File(file, filename);
         Set<Pair<String, String>> libs = new HashSet<>();
+        File parent = new File(file, "build");
         if (jsonFile.exists()) {
             System.out.println("Found json file: " + jsonFile.getAbsolutePath());
             JSONObject json = JSON.parse(Files.readString(jsonFile.toPath()));
@@ -107,45 +104,67 @@ public class MCLWJGLNativesDownloader {
                 versions.add(version);
                 String url = LWJGL_SOURCE_URL + version + ".zip";
                 System.out.println("Download built library: " + url);
-                if (!new File(file, "lwjgl3-" + version).exists()) {
+                if (!new File(parent, "lwjgl3-" + version).exists()) {
                     InputStream inputStream = new URL(url).openStream();
-                    try(ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
-                        ZipEntry entry;
-                        while ((entry = zipInputStream.getNextEntry()) != null) {
-                            File newFile = new File(file, entry.getName());
-                            if (entry.isDirectory()) {
-                                if (!newFile.isDirectory() && !newFile.mkdirs()) {
-                                    throw new IOException("Failed to create directory " + newFile);
-                                }
-                            } else {
-                                // fix for Windows-created archives
-                                File parent = newFile.getParentFile();
-                                if (!parent.isDirectory() && !parent.mkdirs()) {
-                                    throw new IOException("Failed to create directory " + parent);
-                                }
-
-                                // write file content
-                                Files.copy(zipInputStream, newFile.toPath());
-                            }
-                        }
-                        zipInputStream.closeEntry();
+                    try {
+                        ZipUtil.unzip(inputStream, parent);
                     } catch (Exception e) {
                         e.printStackTrace();
                         System.exit(-1);
                     }
                 }
-                File lwjgl3 = new File(file, "lwjgl3-" + version);
+                File lwjgl3 = new File(parent, "lwjgl3-" + version);
                 System.out.println("Replace necessary files...");
                 platformResolver.resolvePrebuild(lwjgl3);
                 System.out.println("Download necessary files...");
                 platformResolver.resolvePredownload(lwjgl3);
                 System.out.println("Build library: " + version);
                 Process process = new ProcessBuilder("ant","compile-templates").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(lwjgl3).start();
-                process.waitFor();
+                if (process.waitFor() != 0) {
+                    System.err.println("Build failed.");
+                    System.exit(-1);
+                }
                 System.out.println("Finish 25%");
                 process = new ProcessBuilder("ant","compile-native").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(lwjgl3).start();
-                process.waitFor();
+                if (process.waitFor() != 0) {
+                    System.err.println("Build failed.");
+                    System.exit(-1);
+                }
                 System.out.println("Finish 50%");
+                platformResolver.resolveDownloadGLFW(parent);
+                System.out.println("Finish 60%");
+                InputStream inputStream = new URL("https://github.com/jemalloc/jemalloc/archive/refs/heads/master.zip").openStream();
+                File jmalloc = new File(parent, "jemalloc-master");
+                ZipUtil.unzip(inputStream, parent);
+                process = new ProcessBuilder("./configure").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(jmalloc).start();
+                if (process.waitFor() != 0) {
+                    System.err.println("Build failed.");
+                    System.exit(-1);
+                }
+                process = new ProcessBuilder("make").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(jmalloc).start();
+                if (process.waitFor() != 0) {
+                    System.err.println("Build failed.");
+                    System.exit(-1);
+                }
+                System.out.println("Finish 70%");
+                inputStream = new URL("https://github.com/kcat/openal-soft/archive/refs/heads/master.zip").openStream();
+                File openal = new File(lwjgl3, "openal-soft-master");
+                ZipUtil.unzip(inputStream, parent);
+                process = new ProcessBuilder("cmake", "..").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(openal).start();
+                if (process.waitFor() != 0) {
+                    System.err.println("Build failed.");
+                    System.exit(-1);
+                }
+                process = new ProcessBuilder("make").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(openal).start();
+                if (process.waitFor() != 0) {
+                    System.err.println("Build failed.");
+                    System.exit(-1);
+                }
+                System.out.println("Finish 80%");
+                platformResolver.resolveBridge(parent);
+                System.out.println("Finish 90%");
+                platformResolver.resolveMove(parent);
+                System.out.println("Finish 100%");
             }
         } else {
             System.out.println("Can't find json file: " + jsonFile.getAbsolutePath());
