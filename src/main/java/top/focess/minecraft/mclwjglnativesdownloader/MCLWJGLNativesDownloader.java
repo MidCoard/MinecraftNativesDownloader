@@ -2,6 +2,7 @@ package top.focess.minecraft.mclwjglnativesdownloader;
 
 import top.focess.minecraft.mclwjglnativesdownloader.platform.Architecture;
 import top.focess.minecraft.mclwjglnativesdownloader.platform.Platform;
+import top.focess.minecraft.mclwjglnativesdownloader.platform.PlatformResolver;
 import top.focess.util.Pair;
 import top.focess.util.json.JSON;
 import top.focess.util.json.JSONList;
@@ -35,6 +36,7 @@ public class MCLWJGLNativesDownloader {
         Architecture arch = Architecture.parse(System.getProperty("os.arch"));
         System.out.println("Platform: " + platform);
         System.out.println("Architecture: " + arch);
+        PlatformResolver platformResolver = PlatformResolver.getPlatformResolver(platform, arch);
         Scanner scanner = new Scanner(System.in);
         if (arch != Architecture.ARM64) {
             System.err.println("Architecture of your computer is not ARM64. If this is want you want, you can ignore this error.");
@@ -105,12 +107,11 @@ public class MCLWJGLNativesDownloader {
                 versions.add(version);
                 String url = LWJGL_SOURCE_URL + version + ".zip";
                 System.out.println("Download built library: " + url);
-                if (!new File(file, "lwjgl3-" + version).exists())
-                    try {
-                        InputStream inputStream = new URL(url).openStream();
-                        ZipInputStream zipInputStream = new ZipInputStream(inputStream);
+                if (!new File(file, "lwjgl3-" + version).exists()) {
+                    InputStream inputStream = new URL(url).openStream();
+                    try(ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
                         ZipEntry entry;
-                        while((entry = zipInputStream.getNextEntry()) != null) {
+                        while ((entry = zipInputStream.getNextEntry()) != null) {
                             File newFile = new File(file, entry.getName());
                             if (entry.isDirectory()) {
                                 if (!newFile.isDirectory() && !newFile.mkdirs()) {
@@ -128,19 +129,23 @@ public class MCLWJGLNativesDownloader {
                             }
                         }
                         zipInputStream.closeEntry();
-                        zipInputStream.close();
                     } catch (Exception e) {
                         e.printStackTrace();
                         System.exit(-1);
                     }
+                }
                 File lwjgl3 = new File(file, "lwjgl3-" + version);
                 System.out.println("Replace necessary files...");
-                Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("config/build-definitions.xml"), new File(lwjgl3, "config/build-definitions.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
-                Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("config/macos/build.xml"), new File(lwjgl3, "config/macos/build.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                platformResolver.resolvePrebuild(lwjgl3);
                 System.out.println("Download necessary files...");
+                platformResolver.resolvePredownload(lwjgl3);
                 System.out.println("Build library: " + version);
                 Process process = new ProcessBuilder("ant","compile-templates").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(lwjgl3).start();
                 process.waitFor();
+                System.out.println("Finish 25%");
+                process = new ProcessBuilder("ant","compile-native").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(lwjgl3).start();
+                process.waitFor();
+                System.out.println("Finish 50%");
             }
         } else {
             System.out.println("Can't find json file: " + jsonFile.getAbsolutePath());

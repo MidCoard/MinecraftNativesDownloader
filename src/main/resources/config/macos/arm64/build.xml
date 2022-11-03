@@ -168,6 +168,9 @@
                     <include name="${module.lwjgl}/jawt/src/generated/c/*.c" if:true="${binding.jawt}"/>
                 </fileset>
             </source>
+            <beforeLink>
+                <mkdir dir="${lib}/${platform}/${build.arch}"/>
+            </beforeLink>
             <link>
                 <arg line="-framework CoreFoundation"/>
                 <fileset dir="${lib}/${platform}/${build.arch}/">
