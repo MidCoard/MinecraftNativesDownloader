@@ -158,13 +158,13 @@ public class MinecraftNativesDownloader {
                     TASKS.add(THREAD_POOL_SCHEDULER.run(() -> {
                         try {
                             String url = LWJGL_SOURCE_URL + version + ".zip";
-                            System.out.println("Download built library: " + url);
+                            System.out.println("Download lwjgl...");
                             if (!new File(parent, "lwjgl3-" + version).exists()) {
                                 InputStream inputStream = new URL(url).openStream();
                                 ZipUtil.unzip(inputStream, parent);
                             }
                             File lwjgl3 = new File(parent, "lwjgl3-" + version);
-                            System.out.println("Before build lwjgl...");
+                            System.out.println("Before building lwjgl...");
                             platformResolver.resolvePrebuildLwjgl(lwjgl3);
                             System.out.println("Build lwjgl-" + version + "...");
                             ProcessBuilder processBuilder;
@@ -185,7 +185,7 @@ public class MinecraftNativesDownloader {
                                 System.err.println("LWJGL compile native failed. Please add --ignore-error to ignore this error if this is a known error.");
                                 System.exit(-1);
                             }
-                            System.out.println("Finish " + COUNTER.incrementAndGet() + "/" + TASKS.size());
+                            System.out.println("Finish building lwjgl " + COUNTER.incrementAndGet() + "/" + TASKS.size());
                         } catch (Exception e) {
                             e.printStackTrace();
                             System.exit(-1);
@@ -198,7 +198,7 @@ public class MinecraftNativesDownloader {
                 TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
                     try {
                         platformResolver.resolveDownloadGLFW(parent);
-                        System.out.println("Finish " + COUNTER.incrementAndGet() + "/" + TASKS.size());
+                        System.out.println("Finish building glfw " + COUNTER.incrementAndGet() + "/" + TASKS.size());
                     } catch (IOException e) {
                         e.printStackTrace();
                         System.exit(-1);
@@ -242,7 +242,7 @@ public class MinecraftNativesDownloader {
                             System.err.println("jemalloc: make failed. Please add --ignore-error to ignore this error if this is a known error.");
                             System.exit(-1);
                         }
-                        System.out.println("Finish " + COUNTER.incrementAndGet() + "/" + TASKS.size());
+                        System.out.println("Finish building jemalloc " + COUNTER.incrementAndGet() + "/" + TASKS.size());
                     } catch (Exception e) {
                         e.printStackTrace();
                         System.exit(-1);
@@ -278,7 +278,7 @@ public class MinecraftNativesDownloader {
                             System.err.println("openal: make failed. Please add --ignore-error to ignore this error if this is a known error.");
                             System.exit(-1);
                         }
-                        System.out.println("Finish " + COUNTER.incrementAndGet() + "/" + TASKS.size());
+                        System.out.println("Finish building openal " + COUNTER.incrementAndGet() + "/" + TASKS.size());
                     } catch (Exception e) {
                         e.printStackTrace();
                         System.exit(-1);
@@ -289,7 +289,7 @@ public class MinecraftNativesDownloader {
                 TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
                     try {
                         platformResolver.resolveBridge(parent);
-                        System.out.println("Finish " + COUNTER.incrementAndGet() + "/" + TASKS.size());
+                        System.out.println("Finish building bridge " + COUNTER.incrementAndGet() + "/" + TASKS.size());
                     } catch (Exception e) {
                         e.printStackTrace();
                         System.exit(-1);
