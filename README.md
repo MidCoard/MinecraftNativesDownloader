@@ -13,11 +13,19 @@ As other platforms like Linux and Windows, there is no Rosetta 2 with their arm6
 
 todo
 
-# Contribution
+# Screenshots
 
-If you have any ideas or suggestions, please open an issue or pull request.
+The image below shows the performance of Minecraft on Apple Silicon with and without native libraries.
 
-Platforms with the unsupported architecture such as **Windows arm64** or **Linux arm64** is welcome to contribute.
+![Run without Rosetta 2](macos_arm64.png)
+
+Minimal fps is 100.
+
+![Run with Rosetta 2](macos_x86_64.png)
+
+Minimal fps is 33.
+
+It runs on the same modpack with 165 mods, and arm64 version running fps is three times as much as x86_64 version.
 
 # Supported Platform
 
@@ -29,6 +37,12 @@ Platforms with the unsupported architecture such as **Windows arm64** or **Linux
 
 ❌❌ means not planned,
 ❌ means not supported , ✅ means supported, - means not tested or not matter.
+
+# Contribution
+
+If you have any ideas or suggestions, please open an issue or pull request.
+
+Platforms with the unsupported architecture such as **Windows arm64** or **Linux arm64** is welcome to contribute.
 
 # License
 

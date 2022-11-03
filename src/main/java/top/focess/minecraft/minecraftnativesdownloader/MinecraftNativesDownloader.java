@@ -154,8 +154,9 @@ public class MinecraftNativesDownloader {
                             while ((entry = jarInputStream.getNextJarEntry()) != null) {
                                 String name = entry.getName().substring(entry.getName().lastIndexOf(File.separatorChar) + 1);
                                 if (name.endsWith(".dylib")) {
-                                    File newFile = new File(new File(parent, "natives"), name);
+                                    File newFile = new File(natives, name);
                                     Files.copy(jarInputStream, newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                                    break;
                                 }
                             }
                             jarInputStream.closeEntry();
@@ -298,7 +299,7 @@ public class MinecraftNativesDownloader {
             for (Task task :TASKS)
                 task.join();
             platformResolver.resolveMove(parent, natives);
-            System.out.println("All natives files are moving to " + parent.getAbsolutePath() + "/natives");
+            System.out.println("All natives files are moving to " + parent.getAbsolutePath() + "/natives/" + arch.getName());
             option = options.get("no-clean");
             if (option == null) {
                 System.out.println("Clean up...");
