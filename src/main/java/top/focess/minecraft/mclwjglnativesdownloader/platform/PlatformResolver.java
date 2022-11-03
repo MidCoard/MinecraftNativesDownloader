@@ -27,7 +27,7 @@ public abstract class PlatformResolver {
 
     public abstract void resolveDownloadGLFW(File parent) throws IOException;
 
-    public abstract void resolveMove(File parent);
+    public abstract void resolveMove(File parent) throws IOException;
 
     public abstract void resolveBridge(File parent) throws IOException, InterruptedException;
 

@@ -61,8 +61,36 @@ public class MacosArm64Resolver extends PlatformResolver {
     }
 
     @Override
-    public void resolveMove(File parent) {
+    public void resolveMove(File parent) throws IOException {
+        File natives = new File(parent, "natives");
+        natives.mkdirs();
+        for (File file : parent.listFiles()) {
+            if (file.isDirectory()) {
+                if (file.getName().contains("glfw")) {
+                    File dylib = find(new File(file, "lib-arm64"), "dylib");
+                    if (dylib != null)
+                        Files.copy(dylib.toPath(),new File(natives, "libglfw.dylib").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                } else if (file.getName().contains("lwjgl")) {
+                    File dir = new File(file, "bin/libs");
+                    Files.copy(new File(dir, "liblwjgl.dylib").toPath(), new File(natives, "liblwjgl.dylib").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(new File(dir, "liblwjgl_opengl.dylib").toPath(), new File(natives, "liblwjgl_opengl.dylib").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(new File(dir, "liblwjgl_stb.dylib").toPath(), new File(natives, "liblwjgl_stb.dylib").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(new File(dir, "liblwjgl_tinyfd.dylib").toPath(), new File(natives, "liblwjgl_tinyfd.dylib").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                } else if (file.getName().contains("jemalloc")) {
+                    File dylib = find(new File(file, "lib"), "dylib");
+                    if (dylib != null)
+                        Files.copy(dylib.toPath(),new File(natives, "libjemalloc.dylib").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
+        }
+    }
 
+    private File find(File file, String suffix) {
+        if (file.isDirectory())
+            for (File f : file.listFiles())
+                if (f.getName().endsWith("." + suffix))
+                    return f;
+        return null;
     }
 
     @Override
@@ -75,7 +103,7 @@ public class MacosArm64Resolver extends PlatformResolver {
         Process process = new ProcessBuilder("mvn","package").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(dir).start();
         if (process.waitFor() != 0) {
             System.err.println("Java-Objective-C-Bridge: mvn package failed. Please add --no-bridge to skip this step if you don't need it.");
-//            System.exit(-1);
+            System.exit(-1);
         }
     }
 }
