@@ -26,7 +26,7 @@ public abstract class PlatformResolver {
 
     public abstract void resolveDownloadGlfw(File parent) throws IOException;
 
-    public abstract void resolveMove(File parent) throws IOException;
+    public abstract void resolveMove(File parent, File natives) throws IOException;
 
     public abstract void resolveBridge(File parent) throws IOException, InterruptedException;
 
@@ -63,7 +63,7 @@ public abstract class PlatformResolver {
         }
 
         @Override
-        public void resolveMove(File parent) {
+        public void resolveMove(File parent, File natives) throws IOException {
 
         }
 

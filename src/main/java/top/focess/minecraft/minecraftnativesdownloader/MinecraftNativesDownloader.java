@@ -105,7 +105,7 @@ public class MinecraftNativesDownloader {
                     FileUtils.forceDelete(f);
                 return;
             }
-            File natives = new File(parent, "natives");
+            File natives = new File(parent, "natives/" + arch.getName());
             if (natives.exists())
                 FileUtils.forceDelete(natives);
             natives.mkdirs();
@@ -297,7 +297,7 @@ public class MinecraftNativesDownloader {
                 }));
             for (Task task :TASKS)
                 task.join();
-            platformResolver.resolveMove(parent);
+            platformResolver.resolveMove(parent, natives);
             System.out.println("All natives files are moving to " + parent.getAbsolutePath() + "/natives");
             option = options.get("no-clean");
             if (option == null) {

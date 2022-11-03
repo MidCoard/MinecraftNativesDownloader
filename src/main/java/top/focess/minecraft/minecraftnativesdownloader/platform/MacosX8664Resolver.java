@@ -21,9 +21,7 @@ public class MacosX8664Resolver extends PlatformResolver{
     }
 
     @Override
-    public void resolveMove(File parent) throws IOException {
-        File natives = new File(parent, "natives");
-        natives.mkdirs();
+    public void resolveMove(File parent, File natives) throws IOException {
         for (File file : parent.listFiles()) {
             if (file.isDirectory()) {
                 if (file.getName().contains("Bridge")) {

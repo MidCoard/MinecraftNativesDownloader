@@ -2,7 +2,13 @@ package top.focess.minecraft.minecraftnativesdownloader.platform;
 
 public enum Architecture {
 
-    X86,X86_64,ARM64;
+    X86("x86"),X86_64("x64"),ARM64("arm64");
+
+    private final String name;
+
+    Architecture(String name) {
+        this.name = name;
+    }
 
     public static Architecture parse(String arch) {
         switch (arch) {
@@ -16,5 +22,9 @@ public enum Architecture {
             default:
                 throw new IllegalArgumentException("Unknown architecture: " + arch);
         }
+    }
+
+    public String getName() {
+        return name;
     }
 }
