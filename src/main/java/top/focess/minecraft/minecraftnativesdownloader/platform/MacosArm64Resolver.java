@@ -25,7 +25,9 @@ public class MacosArm64Resolver extends PlatformResolver {
     public void resolveBeforeLwjglLink(File lwjgl) throws IOException {
         //use higher version of macos sdk, sprintf is not supported in 10.13
         //replace it and make build.xml not automatically generate the new file.
-        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/modules/lwjgl/core/src/generated/c/org_lwjgl_system_libc_LibCStdio.c"), new File(lwjgl, "modules/lwjgl/core/src/generated/c/org_lwjgl_system_libc_LibCStdio.c").toPath(), StandardCopyOption.REPLACE_EXISTING);
+        File file = new File(lwjgl, "modules/lwjgl/core/src/generated/c/org_lwjgl_system_libc_LibCStdio.c");
+        if (file.exists())
+            Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/modules/lwjgl/core/src/generated/c/org_lwjgl_system_libc_LibCStdio.c"), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
         Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/build.xml"), new File(lwjgl, "build.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
 
         InputStream inputStream = new URL("https://www.dyncall.org/r1.2/dyncall-1.2-darwin-20.2.0-arm64-r.tar.gz").openStream();
@@ -124,7 +126,15 @@ public class MacosArm64Resolver extends PlatformResolver {
 
     @Override
     public void resolveBeforeLwjglBuild(File lwjgl) throws IOException {
+        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/update-dependencies.xml"), new File(lwjgl, "update-dependencies.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
         Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/build-definitions.xml"), new File(lwjgl, "config/build-definitions.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
         Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/macos/arm64/build.xml"), new File(lwjgl, "config/macos/build.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
+        File file = new File(lwjgl, "modules/generator/src/main/java/org/lwjgl/system/ExcludeDoclet.java");
+        if (file.exists())
+            Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/modules/generator/src/main/java/org/lwjgl/system/ExcludeDoclet.java"), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        file = new File(lwjgl, "modules/lwjgl/core/src/main/kotlin/core/macos/templates/CoreFoundation.kt");
+        if (file.exists())
+            Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/modules/lwjgl/core/src/main/kotlin/core/macos/templates/CoreFoundation.kt"), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
     }
 }

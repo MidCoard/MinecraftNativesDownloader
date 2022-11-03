@@ -401,7 +401,7 @@
         </parallel>
     </target>
 
-    <target name="compile-native" description="Compiles the native source code" depends="compile">
+    <target name="compile-native" description="Compiles the native source code" depends="init">
         <mkdir dir="${bin.native}"/>
         <antcall target="compile-native-platform"/>
     </target>

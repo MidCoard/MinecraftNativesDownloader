@@ -53,7 +53,8 @@ public class MinecraftNativesDownloader {
                 new OptionParserClassifier("ignore-lwjgl"),
                 new OptionParserClassifier("ignore-glfw"),
                 new OptionParserClassifier("ignore-jemalloc"),
-                new OptionParserClassifier("ignore-openal")
+                new OptionParserClassifier("ignore-openal"),
+                new OptionParserClassifier("ignore-compile-templates")
         );
         Option option = options.get("help");
         Option ignore = options.get("ignore-error");
@@ -61,6 +62,7 @@ public class MinecraftNativesDownloader {
         Option ignoreGlfw = options.get("ignore-glfw");
         Option ignoreJemalloc = options.get("ignore-jemalloc");
         Option ignoreOpenal = options.get("ignore-openal");
+        Option ignoreCompileTemplates = options.get("ignore-compile-templates");
         if (option != null) {
             System.out.println("--path <Miencraft Version Path> Generate Minecraft naives by specified Minecraft version path");
             System.out.println("--no-change-mode Do not change mode of building files.");
@@ -74,6 +76,7 @@ public class MinecraftNativesDownloader {
             System.out.println("--ignore-glfw Ignore building glfw");
             System.out.println("--ignore-jemalloc Ignore building jemalloc");
             System.out.println("--ignore-openal Ignore building openal");
+            System.out.println("--ignore-compile-templates Ignore compile-templates in building lwjgl");
             return;
         }
         Platform platform = Platform.parse(System.getProperty("os.name"));
@@ -196,14 +199,16 @@ public class MinecraftNativesDownloader {
                                 System.out.println("Before building lwjgl...");
                                 platformResolver.resolveBeforeLwjglBuild(lwjgl3);
                                 System.out.println("Build lwjgl-" + version + "...");
-                                Process process = new ProcessBuilder("ant", "compile-templates").redirectOutput(new File(parent, "lwjgl-compile-templates.txt")).redirectError(new File(parent, "lwjgl-compile-templates.txt")).directory(lwjgl3).start();
-                                if (process.waitFor() != 0) {
-                                    System.err.println("LWJGL compile templates failed. Please check the error above.");
-                                    System.exit(-1);
+                                if (ignoreCompileTemplates == null) {
+                                    Process process = new ProcessBuilder("ant", "compile-templates").redirectOutput(new File(parent, "lwjgl-compile-templates.txt")).redirectError(new File(parent, "lwjgl-compile-templates.txt")).directory(lwjgl3).start();
+                                    if (process.waitFor() != 0) {
+                                        System.err.println("LWJGL compile templates failed. Please check the error above.");
+                                        System.exit(-1);
+                                    }
                                 }
                                 System.out.println("Before linking lwjgl...");
                                 platformResolver.resolveBeforeLwjglLink(lwjgl3);
-                                process = new ProcessBuilder("ant", "compile-native").redirectOutput(new File(parent, "lwjgl-compile-native.txt")).redirectError(new File(parent, "lwjgl-compile-native.txt")).directory(lwjgl3).start();
+                                Process process = new ProcessBuilder("ant", "compile-native").redirectOutput(new File(parent, "lwjgl-compile-native.txt")).redirectError(new File(parent, "lwjgl-compile-native.txt")).directory(lwjgl3).start();
                                 if (process.waitFor() != 0 && ignore == null) {
                                     System.err.println("LWJGL compile native failed. Please add --ignore-error to ignore this error if this is a known error.");
                                     System.exit(-1);

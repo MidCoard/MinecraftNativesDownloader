@@ -177,17 +177,17 @@
             </source>
         </build>
 
-        <!-- NativeFileDialog -->
-        <build module="nfd" simple="true" if:true="${binding.nfd}">
-            <source>
-                <arg value="-I${src.main.rel}/include"/>
-                <fileset dir="." includes="${src.main}/nfd_common.c"/>
-                <fileset dir="." includes="${src.main}/nfd_cocoa.m"/>
-            </source>
-            <link>
-                <arg line="-framework AppKit"/>
-            </link>
-        </build>
+<!--        &lt;!&ndash; NativeFileDialog &ndash;&gt;-->
+<!--        <build module="nfd" simple="true" if:true="${binding.nfd}">-->
+<!--            <source>-->
+<!--                <arg value="-I${src.main.rel}/include"/>-->
+<!--                <fileset dir="." includes="${src.main}/nfd_common.c"/>-->
+<!--                <fileset dir="." includes="${src.main}/nfd_cocoa.m"/>-->
+<!--            </source>-->
+<!--            <link>-->
+<!--                <arg line="-framework AppKit"/>-->
+<!--            </link>-->
+<!--        </build>-->
 
         <!-- Nuklear -->
         <build_simple module="nuklear"/>
