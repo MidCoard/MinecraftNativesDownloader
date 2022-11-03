@@ -44,7 +44,16 @@ public class MinecraftNativesDownloader {
     private static Option debug;
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
-        Options options = Options.parse(args, new OptionParserClassifier("path", OptionType.DEFAULT_OPTION_TYPE));
+        Options options = Options.parse(args,
+                new OptionParserClassifier("path", OptionType.DEFAULT_OPTION_TYPE),
+                new OptionParserClassifier("no-change-mode"),
+                new OptionParserClassifier("bridge"),
+                new OptionParserClassifier("help"),
+                new OptionParserClassifier("ignore-error"),
+                new OptionParserClassifier("no-clean"),
+                new OptionParserClassifier("clean"),
+                new OptionParserClassifier("debug")
+        );
         Option option = options.get("help");
         Option ignore = options.get("ignore-error");
         debug = options.get("debug");
