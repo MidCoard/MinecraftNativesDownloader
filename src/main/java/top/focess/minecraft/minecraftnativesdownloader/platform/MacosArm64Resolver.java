@@ -3,7 +3,6 @@ package top.focess.minecraft.minecraftnativesdownloader.platform;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.FileUtils;
-import top.focess.minecraft.minecraftnativesdownloader.MinecraftNativesDownloader;
 import top.focess.minecraft.minecraftnativesdownloader.util.ZipUtil;
 import top.focess.util.json.JSON;
 import top.focess.util.json.JSONList;
@@ -16,9 +15,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
@@ -74,7 +70,7 @@ public class MacosArm64Resolver extends PlatformResolver {
                     File dylib = find(new File(file, "lib-arm64"), "dylib");
                     File target = new File(natives, "libglfw.dylib");
                     if (dylib != null && !target.exists())
-                        Files.copy(dylib.toPath(),target.toPath());
+                        Files.copy(dylib.toPath(), target.toPath());
                 } else if (file.getName().contains("lwjgl")) {
                     File dir = new File(file, "bin/libs");
                     File lwjgl = new File(natives, "liblwjgl.dylib");
@@ -107,25 +103,6 @@ public class MacosArm64Resolver extends PlatformResolver {
                 }
             }
         }
-    }
-
-    private static long size(File file) {
-        try {
-            return Files.size(file.toPath());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static File find(File file, String suffix) {
-        List<File> files = new ArrayList<>();
-        if (file.isDirectory())
-            for (File f : file.listFiles())
-                if (f.getName().endsWith("." + suffix))
-                    files.add(f);
-        if (files.size() == 0)
-            return null;
-        else return files.stream().max(Comparator.comparingLong(MacosArm64Resolver::size)).orElse(null);
     }
 
     @Override

@@ -140,28 +140,33 @@ public class MinecraftNativesDownloader {
             List<Pair<String, String>> builtLibs = new ArrayList<>();
             for (Pair<String, String> lib : libs) {
                 String type = lib.getFirst();
-                String version = lib.getSecond();
-                String url = PREFIX_URL + type + "/" + version + "/" + type + "-" + version + "-" + platform.getDownloadName(arch) + ".jar";
-                System.out.println("Download " + url);
-                try {
-                    InputStream inputStream = new URL(url).openStream();
-                    try (JarInputStream jarInputStream = new JarInputStream(inputStream)) {
-                        JarEntry entry;
-                        while ((entry = jarInputStream.getNextJarEntry()) != null) {
-                            String name = entry.getName().substring(entry.getName().lastIndexOf(File.separatorChar) + 1);
-                            if (name.endsWith(".dylib")) {
-                                File newFile = new File(new File(parent, "natives"), name);
-                                Files.copy(jarInputStream, newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                String fixName = type.indexOf('-') != -1 ? type.substring(type.indexOf('-') + 1) :type;
+                if (fixName.equals("opengl") || fixName.equals("tinyfd") || fixName.equals("stb"))
+                    fixName = "lwjgl";
+                if (options.get("ignore-" + fixName) == null) {
+                    String version = lib.getSecond();
+                    String url = PREFIX_URL + type + "/" + version + "/" + type + "-" + version + "-" + platform.getDownloadName(arch) + ".jar";
+                    System.out.println("Download " + url);
+                    try {
+                        InputStream inputStream = new URL(url).openStream();
+                        try (JarInputStream jarInputStream = new JarInputStream(inputStream)) {
+                            JarEntry entry;
+                            while ((entry = jarInputStream.getNextJarEntry()) != null) {
+                                String name = entry.getName().substring(entry.getName().lastIndexOf(File.separatorChar) + 1);
+                                if (name.endsWith(".dylib")) {
+                                    File newFile = new File(new File(parent, "natives"), name);
+                                    Files.copy(jarInputStream, newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                                }
                             }
+                            jarInputStream.closeEntry();
                         }
-                        jarInputStream.closeEntry();
+                    } catch (FileNotFoundException e) {
+                        builtLibs.add(lib);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        System.exit(-1);
                     }
-                } catch (FileNotFoundException e) {
-                    builtLibs.add(lib);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    System.exit(-1);
-                }
+                } else builtLibs.add(lib);
             }
             System.out.println("Downloading finished. All libraries downloaded: " + (libs.size() - builtLibs.size()));
             System.out.println("Start building libraries: " + builtLibs.size());
@@ -262,7 +267,7 @@ public class MinecraftNativesDownloader {
                         if (buildFile.exists())
                             FileUtils.forceDelete(buildFile);
                         buildFile.mkdirs();
-                        System.out.println("Build openal-soft...");
+                        System.out.println("Build openal...");
                         Process process = new ProcessBuilder("cmake", "..").redirectOutput(new File(parent, "openal-cmake.txt")).redirectError(new File(parent, "openal-cmake.txt")).directory(buildFile).start();
                         if (process.waitFor() != 0) {
                             System.err.println("openal: cmake failed. Please check the error above.");

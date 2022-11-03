@@ -23,7 +23,7 @@ Platforms with the unsupported architecture such as **Windows arm64** or **Linux
 
 |        | Windows | Linux | MACOS |
 |:------:|:-------:|:-----:|:-----:|
-|  X86   |    -    |   -   |   -   |
+|  X86   |    -    |   -   |   ✅   |
 | X86_64 |    -    |   -   |   ❌   |
 | arm64  |    ❌    |   ❌   |   ✅   |
 
