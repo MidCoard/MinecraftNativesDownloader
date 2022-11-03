@@ -45,11 +45,12 @@ public class MCLWJGLNativesDownloader {
         if (option != null) {
             System.out.println("--path <Miencraft Version Path> Generate Minecraft naives by specified Minecraft version path");
             System.out.println("--no-change-mode Do not change mode of building files.");
-            System.out.println("--no-bridge No bridge build for specified os.");
+            System.out.println("--bridge Build bridge for os.");
             System.out.println("--help Show this help message");
             System.out.println("--ignore-error Ignore error when building natives");
             System.out.println("--no-clean Do not clean the build files");
-            System.exit(0);
+            System.out.println("--clean Clean the native files");
+            return;
         }
         Platform platform = Platform.parse(System.getProperty("os.name"));
         Architecture arch = Architecture.parse(System.getProperty("os.arch"));
@@ -74,6 +75,12 @@ public class MCLWJGLNativesDownloader {
         File parent = new File(file, "build");
         if (jsonFile.exists()) {
             System.out.println("Found json file: " + jsonFile.getAbsolutePath());
+            option = options.get("clean");
+            if (option != null) {
+                File natives = new File(parent, "natives");
+                FileUtils.forceDelete(natives);
+                return;
+            }
             JSONObject json = JSON.parse(Files.readString(jsonFile.toPath()));
             JSONList libraries = json.getList("libraries");
             System.out.println("Start collecting libraries needed to download...");
@@ -100,6 +107,7 @@ public class MCLWJGLNativesDownloader {
                 }
             }
             System.out.println("Collect finished. All libraries needed to download: " + libs.size());
+            System.out.println("Needed libraries: " + libs);
             System.out.println("Start downloading...");
             List<Pair<String, String>> builtLibs = new ArrayList<>();
             for (Pair<String, String> lib : libs) {
@@ -120,32 +128,80 @@ public class MCLWJGLNativesDownloader {
             System.out.println("Start building libraries: " + builtLibs.size());
             Set<String> versions = new HashSet<>();
             for (Pair<String, String> lib : builtLibs) {
+                String name = lib.getFirst();
                 String version = lib.getSecond();
                 if (versions.contains(version))
                     continue;
-                versions.add(version);
-                TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
-                    try {
-                        String url = LWJGL_SOURCE_URL + version + ".zip";
-                        System.out.println("Download built library: " + url);
-                        if (!new File(parent, "lwjgl3-" + version).exists()) {
-                            InputStream inputStream = new URL(url).openStream();
-                            ZipUtil.unzip(inputStream, parent);
-                        }
-                        File lwjgl3 = new File(parent, "lwjgl3-" + version);
-                        System.out.println("Replace necessary files...");
-                        platformResolver.resolvePrebuild(lwjgl3);
-                        System.out.println("Download necessary files...");
-                        platformResolver.resolvePredownload(lwjgl3);
-                        System.out.println("Build library: " + version);
-                        Process process = new ProcessBuilder("ant", "compile-templates").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(lwjgl3).start();
-                        if (process.waitFor() != 0) {
-                            System.err.println("LWJGL compile templates failed. Please check the error above.");
+                if (name.equals("lwjgl") || name.equals("lwjgl-opengl") || name.equals("lwjgl-tinyfd") || name.equals("lwjgl-stb")) {
+                    TASKS.add(THREAD_POOL_SCHEDULER.run(() -> {
+                        try {
+                            String url = LWJGL_SOURCE_URL + version + ".zip";
+                            System.out.println("Download built library: " + url);
+                            if (!new File(parent, "lwjgl3-" + version).exists()) {
+                                InputStream inputStream = new URL(url).openStream();
+                                ZipUtil.unzip(inputStream, parent);
+                            }
+                            File lwjgl3 = new File(parent, "lwjgl3-" + version);
+                            System.out.println("Replace necessary files...");
+                            platformResolver.resolvePrebuild(lwjgl3);
+                            System.out.println("Download necessary files...");
+                            platformResolver.resolvePredownload(lwjgl3);
+                            System.out.println("Build library: " + version);
+                            Process process = new ProcessBuilder("ant", "compile-templates").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(lwjgl3).start();
+                            if (process.waitFor() != 0) {
+                                System.err.println("LWJGL compile templates failed. Please check the error above.");
+                                System.exit(-1);
+                            }
+                            process = new ProcessBuilder("ant", "compile-native").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(lwjgl3).start();
+                            if (process.waitFor() != 0 && ignore == null) {
+                                System.err.println("LWJGL compile native failed. Please add --ignore-error to ignore this error if this is a known error.");
+                                System.exit(-1);
+                            }
+                            System.out.println("Finish " + COUNTER.incrementAndGet() + "/" + TASKS.size());
+                        } catch (Exception e) {
+                            e.printStackTrace();
                             System.exit(-1);
                         }
-                        process = new ProcessBuilder("ant", "compile-native").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(lwjgl3).start();
+                    }));
+                    versions.add(version);
+                }
+            }
+            if (find(builtLibs, "lwjgl-glfw"))
+                TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
+                    try {
+                        platformResolver.resolveDownloadGLFW(parent);
+                        System.out.println("Finish " + COUNTER.incrementAndGet() + "/" + TASKS.size());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        System.exit(-1);
+                    }
+                }));
+            if (find(builtLibs, "lwjgl-jemalloc"))
+                TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
+                    try {
+                        System.out.println("Download jemalloc...");
+                        InputStream inputStream = new URL("https://github.com/jemalloc/jemalloc/archive/refs/heads/master.zip").openStream();
+                        File jmalloc = new File(parent, "jemalloc-master");
+                        ZipUtil.unzip(inputStream, parent);
+                        // to avoid write or read permission denied
+                        Option o = options.get("no-change-mode");
+                        Process process;
+                        if (o == null) {
+                            process = new ProcessBuilder("chmod", "-R", "777", ".").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(jmalloc).start();
+                            if (process.waitFor() != 0) {
+                                System.err.println("jemalloc: change mode of * failed. Please add --no-change-mode if there is no permission problem.");
+                                System.exit(-1);
+                            }
+                        }
+                        System.out.println("Build jemalloc...");
+                        process = new ProcessBuilder("./autogen.sh").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(jmalloc).start();
+                        if (process.waitFor() != 0) {
+                            System.err.println("jemalloc: autogen failed. Please check the error above.");
+                            System.exit(-1);
+                        }
+                        process = new ProcessBuilder("make").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(jmalloc).start();
                         if (process.waitFor() != 0 && ignore == null) {
-                            System.err.println("LWJGL compile native failed. Please add --ignore-error to ignore this error if this is a known error.");
+                            System.err.println("jemalloc: make failed. Please add --ignore-error to ignore this error if this is a known error.");
                             System.exit(-1);
                         }
                         System.out.println("Finish " + COUNTER.incrementAndGet() + "/" + TASKS.size());
@@ -154,91 +210,48 @@ public class MCLWJGLNativesDownloader {
                         System.exit(-1);
                     }
                 }));
-            }
-            TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
-                try {
-                    platformResolver.resolveDownloadGLFW(parent);
-                    System.out.println("Finish " + COUNTER.incrementAndGet() + "/" + TASKS.size());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    System.exit(-1);
-                }
-            }));
-            TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
-                try {
-                    System.out.println("Download jemalloc...");
-                    InputStream inputStream = new URL("https://github.com/jemalloc/jemalloc/archive/refs/heads/master.zip").openStream();
-                    File jmalloc = new File(parent, "jemalloc-master");
-                    ZipUtil.unzip(inputStream, parent);
-                    // to avoid write or read permission denied
-                    Option o = options.get("no-change-mode");
-                    Process process;
-                    if (o == null) {
-                        process = new ProcessBuilder("chmod", "-R", "777", ".").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(jmalloc).start();
+            if (find(builtLibs, "lwjgl-openal"))
+                TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
+                    try {
+                        System.out.println("Download openal-soft...");
+                        InputStream inputStream = new URL("https://github.com/kcat/openal-soft/archive/refs/heads/master.zip").openStream();
+                        File openal = new File(parent, "openal-soft-master");
+                        ZipUtil.unzip(inputStream, parent);
+                        File buildFile = new File(openal, "build");
+                        if (buildFile.exists())
+                            FileUtils.forceDelete(buildFile);
+                        buildFile.mkdirs();
+                        System.out.println("Build openal-soft...");
+                        Process process = new ProcessBuilder("cmake", "..").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(buildFile).start();
                         if (process.waitFor() != 0) {
-                            System.err.println("jemalloc: change mode of * failed. Please add --no-change-mode if there is no permission problem.");
+                            System.err.println("openal: cmake failed. Please check the error above.");
                             System.exit(-1);
                         }
-                    }
-                    System.out.println("Build jemalloc...");
-                    process = new ProcessBuilder("./autogen.sh").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(jmalloc).start();
-                    if (process.waitFor() != 0) {
-                        System.err.println("jemalloc: autogen failed. Please check the error above.");
+                        process = new ProcessBuilder("make").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(buildFile).start();
+                        if (process.waitFor() != 0 && ignore == null) {
+                            System.err.println("openal: make failed. Please add --ignore-error to ignore this error if this is a known error.");
+                            System.exit(-1);
+                        }
+                        System.out.println("Finish " + COUNTER.incrementAndGet() + "/" + TASKS.size());
+                    } catch (Exception e) {
+                        e.printStackTrace();
                         System.exit(-1);
                     }
-                    process = new ProcessBuilder("make").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(jmalloc).start();
-                    if (process.waitFor() != 0 && ignore == null) {
-                        System.err.println("jemalloc: make failed. Please add --ignore-error to ignore this error if this is a known error.");
-                        System.exit(-1);
-                    }
-                    System.out.println("Finish " + COUNTER.incrementAndGet() + "/" + TASKS.size());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    System.exit(-1);
-                }
-            }));
-            TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
-                try {
-                    System.out.println("Download openal-soft...");
-                    InputStream inputStream = new URL("https://github.com/kcat/openal-soft/archive/refs/heads/master.zip").openStream();
-                    File openal = new File(parent, "openal-soft-master");
-                    ZipUtil.unzip(inputStream, parent);
-                    File buildFile = new File(openal, "build");
-                    if (buildFile.exists())
-                        FileUtils.forceDelete(buildFile);
-                    buildFile.mkdirs();
-                    System.out.println("Build openal-soft...");
-                    Process process = new ProcessBuilder("cmake", "..").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(buildFile).start();
-                    if (process.waitFor() != 0) {
-                        System.err.println("openal: cmake failed. Please check the error above.");
-                        System.exit(-1);
-                    }
-                    process = new ProcessBuilder("make").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(buildFile).start();
-                    if (process.waitFor() != 0 && ignore == null) {
-                        System.err.println("openal: make failed. Please add --ignore-error to ignore this error if this is a known error.");
-                        System.exit(-1);
-                    }
-                    System.out.println("Finish " + COUNTER.incrementAndGet() + "/" + TASKS.size());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    System.exit(-1);
-                }
-            }));
-            TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
-                try {
-                    Option o = options.get("no-bridge");
-                    if (o == null)
+                }));
+            option = options.get("bridge");
+            if (option != null)
+                TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
+                    try {
                         platformResolver.resolveBridge(parent);
-                    System.out.println("Finish " + COUNTER.incrementAndGet() + "/" + TASKS.size());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    System.exit(-1);
-                }
-            }));
+                        System.out.println("Finish " + COUNTER.incrementAndGet() + "/" + TASKS.size());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        System.exit(-1);
+                    }
+                }));
             for (Task task :TASKS)
                 task.join();
             platformResolver.resolveMove(parent);
-            System.out.println("Finish 100%");
             System.out.println("All natives files are moving to " + parent.getAbsolutePath() + "/natives");
             option = options.get("no-clean");
             if (option == null) {
@@ -252,4 +265,13 @@ public class MCLWJGLNativesDownloader {
             System.out.println("Can't find json file: " + jsonFile.getAbsolutePath());
         }
     }
+
+    private static boolean find(List<Pair<String, String>> libs, String name) {
+        for (Pair<String, String > lib : libs)
+            if (lib.getKey().equals(name))
+                return true;
+        return false;
+    }
+
+
 }

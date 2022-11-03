@@ -50,6 +50,7 @@ public class MacosArm64Resolver extends PlatformResolver {
 
     @Override
     public void resolveDownloadGLFW(File parent) throws IOException {
+        System.out.println("Download GLFW...");
         NetworkHandler networkHandler = new NetworkHandler();
         JSON json = networkHandler.get("https://api.github.com/repos/glfw/glfw/releases/latest", Map.of(), Map.of()).getAsJSON();
         JSONList assets = json.getList("assets");
