@@ -101,8 +101,10 @@ public class MinecraftNativesDownloader {
             System.out.println("Found json file: " + jsonFile.getAbsolutePath());
             option = options.get("clean");
             if (option != null) {
+                System.out.println("Clean up...");
                 for (File f : parent.listFiles())
                     FileUtils.forceDelete(f);
+                System.out.println("Finish");
                 return;
             }
             File natives = new File(parent, "natives/" + arch.getName());
@@ -118,17 +120,20 @@ public class MinecraftNativesDownloader {
                 String group = arguments[0];
                 String type = arguments[1];
                 String version = arguments[2];
-                if (group.equals("org.lwjgl") && ((JSON)library).contains("rules")) {
-                    JSONList rules = library.getList("rules");
+                String temp = arguments.length == 4 ? arguments[3] : "";
+                if (group.equals("org.lwjgl") && (temp.contains ("natives") || ((JSON)library).contains("natives"))) {
                     boolean allowed = true;
-                    for (JSONObject object : rules) {
-                        JSON rule = (JSON) object;
-                        if (rule.get("action").equals("disallow"))
-                            if (rule.contains("os")) {
-                                JSON os = rule.getJSON("os");
-                                if (os.get("name").equals(platform.getNativesName()))
-                                    allowed = false;
-                            }
+                    if (((JSON)library).contains("rules")) {
+                        JSONList rules = library.getList("rules");
+                        for (JSONObject object : rules) {
+                            JSON rule = (JSON) object;
+                            if (rule.get("action").equals("disallow"))
+                                if (rule.contains("os")) {
+                                    JSON os = rule.getJSON("os");
+                                    if (os.get("name").equals(platform.getNativesName()))
+                                        allowed = false;
+                                }
+                        }
                     }
                     if (allowed)
                         libs.add(Pair.of(type, version));

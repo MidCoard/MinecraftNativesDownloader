@@ -27,6 +27,8 @@ Minimal fps is 33.
 
 It runs on the same modpack with 165 mods, and arm64 version running fps is three times as much as x86_64 version.
 
+The comparison of the performance of Minecraft on Apple Silicon with and without native libraries is not official. It is just a test result of my own.
+
 # Supported Platform
 
 |        | Windows | Linux | Macos  |
@@ -37,6 +39,16 @@ It runs on the same modpack with 165 mods, and arm64 version running fps is thre
 
 ❌❌ means not planned,
 ❌ means not supported , ✅ means supported, - means not tested or not matter.
+
+# Supported Minecraft Versions
+
+We do not care about the versions higher than 1.19, which are officially supported. You can still generate native libraries for higher versions, but it is meaningless.
+
+The above table shows the supported Minecraft versions, which are tested.
+If you have tested other versions, please tell me through issues.
+
+- 1.18.2
+- 
 
 # Contribution
 
