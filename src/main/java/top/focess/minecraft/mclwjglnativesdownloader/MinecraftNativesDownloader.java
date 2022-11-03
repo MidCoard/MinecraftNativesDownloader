@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
-public class MCLWJGLNativesDownloader {
+public class MinecraftNativesDownloader {
 
     private static final String PREFIX_URL = "https://repo1.maven.org/maven2/org/lwjgl/";
 

@@ -54,7 +54,7 @@
                     <archive>
                         <manifest>
                             <mainClass>
-                                top.focess.minecraft.mclwjglnativesdownloader.MCLWJGLNativesDownloader
+                                top.focess.minecraft.mclwjglnativesdownloader.MinecraftNativesDownloader
                             </mainClass>
                             <useUniqueVersions>false</useUniqueVersions>
                         </manifest>
