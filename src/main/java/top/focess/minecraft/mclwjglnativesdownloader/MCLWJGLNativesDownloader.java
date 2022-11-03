@@ -84,6 +84,10 @@ public class MCLWJGLNativesDownloader {
                     FileUtils.forceDelete(f);
                 return;
             }
+            File natives = new File(parent, "natives");
+            if (natives.exists())
+                FileUtils.forceDelete(natives);
+            natives.mkdirs();
             JSONObject json = JSON.parse(Files.readString(jsonFile.toPath()));
             JSONList libraries = json.getList("libraries");
             System.out.println("Start collecting libraries needed to download...");
