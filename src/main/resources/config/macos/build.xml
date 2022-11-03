@@ -69,7 +69,6 @@
                 <arg line="-c -std=c++11" if:set="cpp"/>
                 <arg line="-O3 -flto -fPIC @{flags} -DNDEBUG -DLWJGL_MACOS -DLWJGL_${build.arch} -isysroot ${sdkroot} -mmacosx-version-min=${macosx-version-min}"/>
                 <arg line="-target aarch64-apple-darwin -arch arm64"/>
-<!--                todo-->
                 <arg value="-I${jni.headers}"/>
                 <arg value="-I${jni.headers}/darwin"/>
 
@@ -101,7 +100,6 @@
             <local name="src.main.rel"/>
             <local name="src.generated"/>
             <property name="src.main" location="${module.lwjgl}/@{module}/src/main/c" relative="true"/>
-<!--            <property name="src.main.rel" location="${module.lwjgl.rel}/@{module}/src/main/c" relative="true"/>-->
             <property name="src.main.rel" value="${module.lwjgl.rel}/@{module}/src/main/c"/>
             <property name="src.generated" location="${module.lwjgl}/@{module}/src/generated/c" relative="true"/>
 
@@ -133,8 +131,7 @@
             <apply executable="${clang}" failonerror="true" parallel="true" taskname="Linker" unless:set="lib-uptodate">
                 <srcfile/>
                 <arg line='-dynamiclib -Wl,-no_compact_unwind -mmacosx-version-min=${macosx-version-min} -o ${lib}/lib${name}.dylib -O3 -flto -fPIC'/>
-                <arg line="-target aarch64-apple-darwin -arch arm64" if:set="build.arch.arm"/>
-<!--                todo-->
+                <arg line="-target aarch64-apple-darwin -arch arm64" />
                 <fileset dir="${dest}" includes="*.o"/>
                 <link/>
             </apply>
@@ -163,10 +160,7 @@
         <!-- CORE -->
         <build module="core" flags="-Werror -Wfatal-errors -Wall -Wextra -pedantic">
             <source>
-                <arg value="-I${src.main.rel}/libffi"/>
-                <arg value="-I${src.main.rel}/libffi/aarch64"/>
-<!--                <arg value="-I${src.main.rel}/dyncall"/>-->
-<!--                todo-->
+                <arg value="-I${src.main.rel}/dyncall"/>
                 <fileset dir=".">
                     <include name="${src.main}/*.c"/>
                     <include name="${src.generated}/*.c"/>
@@ -174,25 +168,10 @@
                     <include name="${module.lwjgl}/jawt/src/generated/c/*.c" if:true="${binding.jawt}"/>
                 </fileset>
             </source>
-<!--            <beforeLink>-->
-<!--                <parallel threadsPerProcessor="2" failonany="true" unless:set="lib-uptodate">-->
-<!--                    <update-dependency module="core" artifact="core/libffi.a"/>-->
-<!--                </parallel>-->
-<!--            </beforeLink>-->
-<!--            <beforeLink>-->
-<!--                <mkdir dir="${lib}/${platform}/${build.arch}"/>-->
-<!--                <parallel threadsPerProcessor="2" failonany="true" unless:set="lib-uptodate">-->
-<!--                    <update-dependency name="dyncall" artifact="${build.arch}/libdyncall_s.a"/>-->
-<!--                    <update-dependency name="dyncallback" artifact="${build.arch}/libdyncallback_s.a"/>-->
-<!--                    <update-dependency name="dynload" artifact="${build.arch}/libdynload_s.a"/>-->
-<!--                </parallel>-->
-<!--            </beforeLink>-->
             <link>
                 <arg line="-framework CoreFoundation"/>
                 <fileset dir="${lib}/${platform}/${build.arch}/">
                     <include name="libdyn*.a"/>
-<!--                    <include name="libffi.a"/>-->
-<!--                    todo-->
                 </fileset>
             </link>
         </build>
@@ -322,36 +301,6 @@
             </beforeCompile>
         </build>
 
-        <!-- AMD Tootle -->
-<!--        <build module="tootle" lang="c++" if:true="${binding.tootle}">-->
-<!--            <beforeCompile>-->
-<!--                <compile flags="-D_SOFTWARE_ONLY_VERSION -D_LINUX">-->
-<!--                    <arg value="-I${src.main.rel}"/>-->
-<!--                    <fileset dir="." includes="${src.main}/*.c"/>-->
-<!--                </compile>-->
-<!--                <compile lang="c++" flags="-D_SOFTWARE_ONLY_VERSION -D_LINUX">-->
-<!--                    <arg value="-I${src.main.rel}"/>-->
-<!--                    <arg value="-I${src.main.rel}/include"/>-->
-<!--                    <arg value="-I${src.main.rel}/RayTracer"/>-->
-<!--                    <arg value="-I${src.main.rel}/RayTracer/JRT"/>-->
-<!--                    <arg value="-I${src.main.rel}/RayTracer/Math"/>-->
-<!--                    <fileset dir=".">-->
-<!--                        <include name="${src.main}/*.cpp"/>-->
-<!--                        <exclude name="${src.main}/d3d*.cpp"/>-->
-<!--                        <exclude name="${src.main}/gdi*.cpp"/>-->
-<!--                    </fileset>-->
-<!--                    <fileset dir="." includes="${src.main}/RayTracer/*.cpp"/>-->
-<!--                    <fileset dir="." includes="${src.main}/RayTracer/JRT/*.cpp"/>-->
-<!--                    <fileset dir="." includes="${src.main}/RayTracer/Math/*.cpp"/>-->
-<!--                </compile>-->
-<!--            </beforeCompile>-->
-<!--            <source>-->
-<!--                <arg value="-D_LINUX"/>-->
-<!--                <arg value="-I${src.main.rel}/include"/>-->
-<!--                <fileset dir="." includes="${src.generated}/*.cpp"/>-->
-<!--            </source>-->
-<!--        </build>-->
-
         <!-- Vulkan Memory Allocator -->
         <build module="vma" lang="c++" if:true="${binding.vma}">
             <source>
@@ -408,24 +357,5 @@
                 </resourceexists>
             </or>
         </condition>
-
-        <sequential unless:set="native-dependencies-uptodate">
-            <mkdir dir="${lib}/${platform}/${build.arch}"/>
-
-            <parallel threadsPerProcessor="4" failonany="true">
-
-<!--            <update-dependency name="Assimp" artifact="${build.arch}/libassimp.dylib" dest="${lib}" if:true="${binding.assimp}"/>-->
-<!--            <update-dependency name="bgfx" artifact="${build.arch}/libbgfx.dylib" dest="${lib}" if:true="${binding.bgfx}"/>-->
-<!--            <update-dependency name="jemalloc" artifact="${build.arch}/libjemalloc.dylib" dest="${lib}" if:true="${binding.jemalloc}"/>-->
-<!--            <update-dependency name="GLFW" artifact="${build.arch}/libglfw.dylib" dest="${lib}" if:true="${binding.glfw}"/>-->
-<!--            <update-dependency name="OpenAL32" artifact="${build.arch}/libopenal.dylib" dest="${lib}" if:true="${binding.openal}"/>-->
-<!--            <update-dependency name="OpenVR" artifact="${build.arch}/libopenvr_api.dylib" dest="${lib}" if:true="${binding.openvr}"/>-->
-<!--            <update-dependency name="Opus" artifact="${build.arch}/libopus.dylib" dest="${lib}" if:true="${binding.opus}"/>-->
-<!--            <update-dependency name="MoltenVK" artifact="${build.arch}/libMoltenVK.dylib" dest="${lib}" if:true="${binding.vulkan}"/>-->
-
-            </parallel>
-
-            <touch file="${lib}/touch_${platform}.txt" verbose="false"/>
-        </sequential>
     </target>
 </project>

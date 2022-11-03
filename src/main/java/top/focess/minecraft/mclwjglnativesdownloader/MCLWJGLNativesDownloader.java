@@ -19,10 +19,7 @@ import java.net.URL;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -38,6 +35,13 @@ public class MCLWJGLNativesDownloader {
         Architecture arch = Architecture.parse(System.getProperty("os.arch"));
         System.out.println("Platform: " + platform);
         System.out.println("Architecture: " + arch);
+        Scanner scanner = new Scanner(System.in);
+        if (arch != Architecture.ARM64) {
+            System.err.println("Architecture of your computer is not ARM64. If this is want you want, you can ignore this error.");
+            System.out.println("But if your computer is ARM64, please make sure you are using ARM64 Java.");
+            System.err.println("Please enter 'ENTER' key to continue.");
+            scanner.next();
+        }
         Options options = Options.parse(args, new OptionParserClassifier("path", OptionType.DEFAULT_OPTION_TYPE));
         Option option = options.get("path");
         String path = System.getProperty("user.dir");
@@ -74,14 +78,14 @@ public class MCLWJGLNativesDownloader {
                         libs.add(Pair.of(type, version));
                 }
             }
-            System.out.println("Collecting finished. All libraries needed to download: " + libs.size());
+            System.out.println("Collect finished. All libraries needed to download: " + libs.size());
             System.out.println("Start downloading...");
             List<Pair<String, String>> builtLibs = new ArrayList<>();
             for (Pair<String, String> lib : libs) {
                 String type = lib.getFirst();
                 String version = lib.getSecond();
                 String url = PREFIX_URL + type + "/" + version + "/" + type + "-" + version + "-" + platform.getDownloadName(arch) + ".jar";
-                System.out.println("Downloading " + url);
+                System.out.println("Download " + url);
                 try {
                     InputStream inputStream = new URL(url).openStream();
                 } catch (FileNotFoundException e) {
@@ -100,7 +104,7 @@ public class MCLWJGLNativesDownloader {
                     continue;
                 versions.add(version);
                 String url = LWJGL_SOURCE_URL + version + ".zip";
-                System.out.println("Downloading built library: " + url);
+                System.out.println("Download built library: " + url);
                 if (!new File(file, "lwjgl3-" + version).exists())
                     try {
                         InputStream inputStream = new URL(url).openStream();
@@ -131,9 +135,10 @@ public class MCLWJGLNativesDownloader {
                     }
                 File lwjgl3 = new File(file, "lwjgl3-" + version);
                 System.out.println("Replace necessary files...");
-                Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("config/build-definitions.xml"), new File(lwjgl3, "config/build-dependencies.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("config/build-definitions.xml"), new File(lwjgl3, "config/build-definitions.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
                 Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("config/macos/build.xml"), new File(lwjgl3, "config/macos/build.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
-                System.out.println("Building library: " + version);
+                System.out.println("Download necessary files...");
+                System.out.println("Build library: " + version);
                 Process process = new ProcessBuilder("ant","compile-templates").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(lwjgl3).start();
                 process.waitFor();
             }
