@@ -28,6 +28,10 @@ public class MacosArm64Resolver extends PlatformResolver {
     public void resolvePrebuild(File parent) throws IOException {
         Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/build-definitions.xml"), new File(parent, "config/build-definitions.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
         Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/macos/arm64/build.xml"), new File(parent, "config/macos/build.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+        //use higher version of macos sdk, sprintf is not supported in 10.13
+        //replace it
+        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/modules/lwjgl/core/src/generated/c/org_lwjgl_system_libc_LibCStdio.c"), new File(parent, "modules/lwjgl/core/src/generated/c/org_lwjgl_system_libc_LibCStdio.c").toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
     @Override
