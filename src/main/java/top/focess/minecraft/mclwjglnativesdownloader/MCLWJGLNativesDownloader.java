@@ -38,6 +38,7 @@ public class MCLWJGLNativesDownloader {
             System.out.println("--no-bridge No bridge build for specified os.");
             System.out.println("--help Show this help message");
             System.out.println("--ignore-error Ignore error when building natives");
+            System.out.println("--no-clean Do not clean the build files");
             System.exit(0);
         }
         Platform platform = Platform.parse(System.getProperty("os.name"));
@@ -157,6 +158,7 @@ public class MCLWJGLNativesDownloader {
                         System.exit(-1);
                     }
                 }
+                System.out.println("Build jemalloc...");
                 process = new ProcessBuilder("./autogen.sh").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(jmalloc).start();
                 if (process.waitFor() != 0) {
                     System.err.println("jemalloc: autogen failed. Please check the error above.");
@@ -176,6 +178,7 @@ public class MCLWJGLNativesDownloader {
                 if (buildFile.exists())
                     FileUtils.forceDelete(buildFile);
                 buildFile.mkdirs();
+                System.out.println("Build openal-soft...");
                 process = new ProcessBuilder("cmake", "..").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(buildFile).start();
                 if (process.waitFor() != 0) {
                     System.err.println("openal: cmake failed. Please check the error above.");
@@ -194,6 +197,14 @@ public class MCLWJGLNativesDownloader {
                 platformResolver.resolveMove(parent);
                 System.out.println("Finish 100%");
                 System.out.println("All natives files are moving to " + parent.getAbsolutePath() + "/natives");
+                option = options.get("no-clean");
+                if (option == null) {
+                    System.out.println("Clean up...");
+                    for (File f : parent.listFiles())
+                        if (!f.getName().equals("natives"))
+                            FileUtils.forceDelete(f);
+                }
+                System.out.println("Finish");
             }
         } else {
             System.out.println("Can't find json file: " + jsonFile.getAbsolutePath());

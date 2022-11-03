@@ -120,12 +120,14 @@ public class MacosArm64Resolver extends PlatformResolver {
     public void resolveBridge(File parent) throws IOException,InterruptedException {
         File dir = new File(parent, "Java-Objective-C-Bridge-master");
         if (!dir.exists()) {
+            System.out.println("Download Java-Objective-C-Bridge...");
             InputStream inputStream = new URL("https://github.com/shannah/Java-Objective-C-Bridge/archive/refs/heads/master.zip").openStream();
             ZipUtil.unzip(inputStream, parent);
         }
         File target = new File(dir, "target");
         if (target.exists())
             FileUtils.forceDelete(target);
+        System.out.println("Build Java-Objective-C-Bridge...");
         Process process = new ProcessBuilder("mvn","package").redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT).directory(dir).start();
         if (process.waitFor() != 0) {
             System.err.println("Java-Objective-C-Bridge: mvn package failed. Please add --no-bridge to skip this step if you don't need it.");
