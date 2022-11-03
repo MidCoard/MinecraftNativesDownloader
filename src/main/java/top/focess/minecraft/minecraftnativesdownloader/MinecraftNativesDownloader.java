@@ -43,6 +43,8 @@ public class MinecraftNativesDownloader {
 
     private static Option debug;
 
+    private static File out;
+
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
         Options options = Options.parse(args,
                 new OptionParserClassifier("path", OptionType.DEFAULT_OPTION_TYPE),
@@ -89,6 +91,7 @@ public class MinecraftNativesDownloader {
         File jsonFile = new File(file, filename);
         Set<Pair<String, String>> libs = new HashSet<>();
         File parent = new File(file, "build");
+        out = new File(parent, "out.txt");
         if (jsonFile.exists()) {
             System.out.println("Found json file: " + jsonFile.getAbsolutePath());
             option = options.get("clean");
@@ -181,6 +184,7 @@ public class MinecraftNativesDownloader {
                             processBuilder = new ProcessBuilder("ant", "compile-templates");
                             if (debug != null)
                                 processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
+                            else processBuilder.redirectOutput(out).redirectError(out);
                             process = processBuilder.directory(lwjgl3).start();
                             if (process.waitFor() != 0) {
                                 System.err.println("LWJGL compile templates failed. Please check the error above.");
@@ -191,6 +195,7 @@ public class MinecraftNativesDownloader {
                             processBuilder = new ProcessBuilder("ant", "compile-native");
                             if (debug != null)
                                 processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
+                            else processBuilder.redirectOutput(out).redirectError(out);
                             process = processBuilder.directory(lwjgl3).start();
                             if (process.waitFor() != 0 && ignore == null) {
                                 System.err.println("LWJGL compile native failed. Please add --ignore-error to ignore this error if this is a known error.");
@@ -230,6 +235,7 @@ public class MinecraftNativesDownloader {
                             processBuilder = new ProcessBuilder("chmod", "-R", "777", ".");
                             if (debug != null)
                                 processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
+                            else processBuilder.redirectOutput(out).redirectError(out);
                             process = processBuilder.directory(jmalloc).start();
                             if (process.waitFor() != 0) {
                                 System.err.println("jemalloc: change mode of * failed. Please add --no-change-mode if there is no permission problem.");
@@ -240,6 +246,7 @@ public class MinecraftNativesDownloader {
                         processBuilder = new ProcessBuilder("./autogen.sh");
                         if (debug != null)
                             processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
+                        else processBuilder.redirectOutput(out).redirectError(out);
                         process = processBuilder.directory(jmalloc).start();
                         if (process.waitFor() != 0) {
                             System.err.println("jemalloc: autogen failed. Please check the error above.");
@@ -248,6 +255,7 @@ public class MinecraftNativesDownloader {
                         processBuilder = new ProcessBuilder("make");
                         if (debug != null)
                             processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
+                        else processBuilder.redirectOutput(out).redirectError(out);
                         process = processBuilder.directory(jmalloc).start();
                         if (process.waitFor() != 0 && ignore == null) {
                             System.err.println("jemalloc: make failed. Please add --ignore-error to ignore this error if this is a known error.");
@@ -276,6 +284,7 @@ public class MinecraftNativesDownloader {
                         processBuilder = new ProcessBuilder("cmake", "..");
                         if (debug != null)
                             processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
+                        else processBuilder.redirectOutput(out).redirectError(out);
                         process = processBuilder.directory(buildFile).start();
                         if (process.waitFor() != 0) {
                             System.err.println("openal: cmake failed. Please check the error above.");
@@ -284,6 +293,7 @@ public class MinecraftNativesDownloader {
                         processBuilder = new ProcessBuilder("make");
                         if (debug != null)
                             processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
+                        else processBuilder.redirectOutput(out).redirectError(out);
                         process = processBuilder.directory(buildFile).start();
                         if (process.waitFor() != 0 && ignore == null) {
                             System.err.println("openal: make failed. Please add --ignore-error to ignore this error if this is a known error.");
@@ -316,6 +326,7 @@ public class MinecraftNativesDownloader {
                 for (File f : parent.listFiles())
                     if (!f.getName().equals("natives"))
                         FileUtils.forceDelete(f);
+                out.delete();
             }
             System.out.println("Finish");
         } else {
@@ -333,5 +344,9 @@ public class MinecraftNativesDownloader {
 
     public static Option getDebug() {
         return debug;
+    }
+
+    public static File getOut() {
+        return out;
     }
 }

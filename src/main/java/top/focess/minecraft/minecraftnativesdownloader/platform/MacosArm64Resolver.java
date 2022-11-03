@@ -145,6 +145,7 @@ public class MacosArm64Resolver extends PlatformResolver {
         processBuilder = new ProcessBuilder("mvn","package");
         if (MinecraftNativesDownloader.getDebug() != null)
             processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT).redirectError(ProcessBuilder.Redirect.INHERIT);
+        else processBuilder.redirectOutput(MinecraftNativesDownloader.getOut()).redirectError(MinecraftNativesDownloader.getOut());
         process = processBuilder.directory(dir).start();
         if (process.waitFor() != 0) {
             System.err.println("Java-Objective-C-Bridge: mvn package failed. Please add --no-bridge to skip this step if you don't need it.");
