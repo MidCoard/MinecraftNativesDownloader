@@ -23,7 +23,7 @@ public abstract class PlatformResolver {
 
     public abstract void resolveBeforeLwjglLink(File lwjgl) throws IOException;
 
-    public abstract void resolveDownloadGLFW(File parent) throws IOException;
+    public abstract void resolveDownloadGlfw(File parent) throws IOException;
 
     public abstract void resolveMove(File parent) throws IOException;
 
@@ -39,7 +39,7 @@ public abstract class PlatformResolver {
         }
 
         @Override
-        public void resolveDownloadGLFW(File parent) {
+        public void resolveDownloadGlfw(File parent) {
 
         }
 

@@ -49,19 +49,31 @@ public class MinecraftNativesDownloader {
                 new OptionParserClassifier("help"),
                 new OptionParserClassifier("ignore-error"),
                 new OptionParserClassifier("no-clean"),
-                new OptionParserClassifier("clean")
+                new OptionParserClassifier("clean"),
+                new OptionParserClassifier("ignore-lwjgl"),
+                new OptionParserClassifier("ignore-glfw"),
+                new OptionParserClassifier("ignore-jemalloc"),
+                new OptionParserClassifier("ignore-openal")
         );
         Option option = options.get("help");
         Option ignore = options.get("ignore-error");
+        Option ignoreLwjgl = options.get("ignore-lwjgl");
+        Option ignoreGlfw = options.get("ignore-glfw");
+        Option ignoreJemalloc = options.get("ignore-Jemalloc");
+        Option ignoreOpenal = options.get("ignore-openal");
         if (option != null) {
             System.out.println("--path <Miencraft Version Path> Generate Minecraft naives by specified Minecraft version path");
             System.out.println("--no-change-mode Do not change mode of building files.");
-            System.out.println("--bridge Build bridge for os.");
+            System.out.println("--bridge Build bridge for specified os.");
             System.out.println("--help Show this help message");
-            System.out.println("--ignore-error Ignore error when building natives");
+            System.out.println("--ignore-error Ignore error when building native files");
             System.out.println("--no-clean Do not clean the build files");
             System.out.println("--clean Clean the native files");
             System.out.println("--debug Show detailed message");
+            System.out.println("--ignore-lwjgl Ignore building lwjgl");
+            System.out.println("--ignore-glfw Ignore building glfw");
+            System.out.println("--ignore-jemalloc Ignore building jemalloc");
+            System.out.println("--ignore-openal Ignore building openal");
             return;
         }
         Platform platform = Platform.parse(System.getProperty("os.name"));
@@ -154,56 +166,57 @@ public class MinecraftNativesDownloader {
             System.out.println("Downloading finished. All libraries downloaded: " + (libs.size() - builtLibs.size()));
             System.out.println("Start building libraries: " + builtLibs.size());
             Set<String> versions = new HashSet<>();
-            for (Pair<String, String> lib : builtLibs) {
-                String name = lib.getFirst();
-                String version = lib.getSecond();
-                if (versions.contains(version))
-                    continue;
-                if (name.equals("lwjgl") || name.equals("lwjgl-opengl") || name.equals("lwjgl-tinyfd") || name.equals("lwjgl-stb")) {
-                    TASKS.add(THREAD_POOL_SCHEDULER.run(() -> {
-                        try {
-                            String url = LWJGL_SOURCE_URL + version + ".zip";
-                            System.out.println("Download lwjgl...");
-                            if (!new File(parent, "lwjgl3-" + version).exists()) {
-                                InputStream inputStream = new URL(url).openStream();
-                                ZipUtil.unzip(inputStream, parent);
-                            }
-                            File lwjgl3 = new File(parent, "lwjgl3-" + version);
-                            System.out.println("Before building lwjgl...");
-                            platformResolver.resolveBeforeLwjglBuild(lwjgl3);
-                            System.out.println("Build lwjgl-" + version + "...");
-                            Process process = new ProcessBuilder("ant", "compile-templates").redirectOutput(new File(parent, "lwjgl-compile-templates.txt")).redirectError(new File(parent, "lwjgl-compile-templates.txt")).directory(lwjgl3).start();
-                            if (process.waitFor() != 0) {
-                                System.err.println("LWJGL compile templates failed. Please check the error above.");
+            if (ignoreLwjgl == null)
+                for (Pair<String, String> lib : builtLibs) {
+                    String name = lib.getFirst();
+                    String version = lib.getSecond();
+                    if (versions.contains(version))
+                        continue;
+                    if (name.equals("lwjgl") || name.equals("lwjgl-opengl") || name.equals("lwjgl-tinyfd") || name.equals("lwjgl-stb")) {
+                        TASKS.add(THREAD_POOL_SCHEDULER.run(() -> {
+                            try {
+                                String url = LWJGL_SOURCE_URL + version + ".zip";
+                                System.out.println("Download lwjgl...");
+                                if (!new File(parent, "lwjgl3-" + version).exists()) {
+                                    InputStream inputStream = new URL(url).openStream();
+                                    ZipUtil.unzip(inputStream, parent);
+                                }
+                                File lwjgl3 = new File(parent, "lwjgl3-" + version);
+                                System.out.println("Before building lwjgl...");
+                                platformResolver.resolveBeforeLwjglBuild(lwjgl3);
+                                System.out.println("Build lwjgl-" + version + "...");
+                                Process process = new ProcessBuilder("ant", "compile-templates").redirectOutput(new File(parent, "lwjgl-compile-templates.txt")).redirectError(new File(parent, "lwjgl-compile-templates.txt")).directory(lwjgl3).start();
+                                if (process.waitFor() != 0) {
+                                    System.err.println("LWJGL compile templates failed. Please check the error above.");
+                                    System.exit(-1);
+                                }
+                                System.out.println("Before linking lwjgl...");
+                                platformResolver.resolveBeforeLwjglLink(lwjgl3);
+                                process = new ProcessBuilder("ant", "compile-native").redirectOutput(new File(parent, "lwjgl-compile-native.txt")).redirectError(new File(parent, "lwjgl-compile-native.txt")).directory(lwjgl3).start();
+                                if (process.waitFor() != 0 && ignore == null) {
+                                    System.err.println("LWJGL compile native failed. Please add --ignore-error to ignore this error if this is a known error.");
+                                    System.exit(-1);
+                                }
+                                System.out.println("Finish building lwjgl " + COUNTER.incrementAndGet() + "/" + TASKS.size());
+                            } catch (Exception e) {
+                                e.printStackTrace();
                                 System.exit(-1);
                             }
-                            System.out.println("Before linking lwjgl...");
-                            platformResolver.resolveBeforeLwjglLink(lwjgl3);
-                            process = new ProcessBuilder("ant", "compile-native").redirectOutput(new File(parent, "lwjgl-compile-native.txt")).redirectError(new File(parent, "lwjgl-compile-native.txt")).directory(lwjgl3).start();
-                            if (process.waitFor() != 0 && ignore == null) {
-                                System.err.println("LWJGL compile native failed. Please add --ignore-error to ignore this error if this is a known error.");
-                                System.exit(-1);
-                            }
-                            System.out.println("Finish building lwjgl " + COUNTER.incrementAndGet() + "/" + TASKS.size());
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            System.exit(-1);
-                        }
-                    }));
-                    versions.add(version);
+                        }));
+                        versions.add(version);
+                    }
                 }
-            }
-            if (find(builtLibs, "lwjgl-glfw"))
+            if (ignoreGlfw == null && find(builtLibs, "lwjgl-glfw"))
                 TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
                     try {
-                        platformResolver.resolveDownloadGLFW(parent);
+                        platformResolver.resolveDownloadGlfw(parent);
                         System.out.println("Finish building glfw " + COUNTER.incrementAndGet() + "/" + TASKS.size());
                     } catch (IOException e) {
                         e.printStackTrace();
                         System.exit(-1);
                     }
                 }));
-            if (find(builtLibs, "lwjgl-jemalloc"))
+            if (ignoreJemalloc == null && find(builtLibs, "lwjgl-jemalloc"))
                 TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
                     try {
                         System.out.println("Download jemalloc...");
@@ -237,7 +250,7 @@ public class MinecraftNativesDownloader {
                         System.exit(-1);
                     }
                 }));
-            if (find(builtLibs, "lwjgl-openal"))
+            if (ignoreOpenal == null && find(builtLibs, "lwjgl-openal"))
                 TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
                     try {
                         System.out.println("Download openal-soft...");
