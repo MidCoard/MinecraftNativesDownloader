@@ -26,7 +26,7 @@ public class MacosArm64Resolver extends PlatformResolver {
 
 
     @Override
-    public void resolvePrebuildLwjgl(File lwjgl) throws IOException {
+    public void resolveBeforeLink(File lwjgl) throws IOException {
         Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/build-definitions.xml"), new File(lwjgl, "config/build-definitions.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
         Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/macos/arm64/build.xml"), new File(lwjgl, "config/macos/build.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
 
