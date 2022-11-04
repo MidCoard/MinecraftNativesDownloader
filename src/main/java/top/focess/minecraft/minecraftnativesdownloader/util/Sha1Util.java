@@ -31,9 +31,8 @@ public class Sha1Util {
         DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, SHA_1);
         byte[] bytes = new byte[1024];
         // read all file content
-        while (digestInputStream.read(bytes) > 0);
+        while (digestInputStream.read(bytes) != -1);
 
-//        digest = digestInputStream.getMessageDigest();
         byte[] resultByteArry = SHA_1.digest();
         return bytesToHexString(resultByteArry);
     }
@@ -56,7 +55,7 @@ public class Sha1Util {
                 // one character, so we need to append a character of '0'
                 sb.append("0");
             }
-            sb.append(Integer.toHexString(value).toUpperCase());
+            sb.append(Integer.toHexString(value));
         }
         return sb.toString();
     }

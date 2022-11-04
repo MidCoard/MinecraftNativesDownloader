@@ -317,9 +317,9 @@ public class MinecraftNativesDownloader {
             System.out.println("All natives files are moving to " + parent.getAbsolutePath() + "/natives/" + arch.getName());
             System.out.println("Generate SHA1");
             File sha1 = new File(natives, "sha1.txt");
-            File jocb = new File(natives, "jocb.jar");
+            File jocb = new File(natives, "java-objc-bridge.jar");
             if (jocb.exists())
-                Files.writeString(sha1.toPath(), "jocb.jar: " + Sha1Util.genSha1(jocb), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                Files.writeString(sha1.toPath(), "java-objc-bridge.jar: " + Sha1Util.genSha1(jocb), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
             option = options.get("no-clean");
             if (option == null) {
                 System.out.println("Clean up...");

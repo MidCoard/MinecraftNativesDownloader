@@ -111,7 +111,7 @@ public class MacosArm64Resolver extends PlatformResolver {
                         Files.copy(dylib.toPath(), target.toPath());
                 } else if (file.getName().contains("Bridge")) {
                     File dylib = find(new File(file, "target"), "jar");
-                    File target = new File(natives, "jocb.jar");
+                    File target = new File(natives, "java-objc-bridge.jar");
                     if (dylib != null && !target.exists())
                         Files.copy(dylib.toPath(), target.toPath());
                 }
