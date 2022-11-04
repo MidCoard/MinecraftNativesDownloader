@@ -1,6 +1,7 @@
 package top.focess.minecraft.minecraftnativesdownloader.platform;
 
 import top.focess.util.Pair;
+import top.focess.util.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +48,7 @@ public abstract class PlatformResolver {
 
     public abstract void resolveMove(File parent, File natives, String bridgeVersion) throws IOException;
 
-    public abstract void resolveBridge(File parent) throws IOException, InterruptedException;
+    public abstract void resolveBridge(File parent, JSONObject json) throws IOException, InterruptedException;
 
     public abstract void resolveBeforeLwjglBuild(File lwjgl) throws IOException;
 
@@ -69,7 +70,7 @@ public abstract class PlatformResolver {
         }
 
         @Override
-        public void resolveBridge(File parent) {
+        public void resolveBridge(File parent, JSONObject json) {
 
         }
 

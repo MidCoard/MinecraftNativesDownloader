@@ -132,7 +132,7 @@ public class MacosArm64Resolver extends PlatformResolver {
     }
 
     @Override
-    public void resolveBridge(File parent) throws IOException, InterruptedException {
+    public void resolveBridge(File parent,JSONObject json) throws IOException, InterruptedException {
         File dir = new File(parent, "Java-Objective-C-Bridge-master");
         if (!dir.exists()) {
             System.out.println("Download Java-Objective-C-Bridge...");
@@ -145,8 +145,34 @@ public class MacosArm64Resolver extends PlatformResolver {
         System.out.println("Build Java-Objective-C-Bridge...");
         Process process = new ProcessBuilder("mvn", "package").redirectOutput(new File(parent, "bridge.txt")).redirectError(new File(parent, "bridge.txt")).directory(dir).start();
         if (process.waitFor() != 0) {
+            System.err.println(Files.readString(new File(parent, "bridge.txt").toPath()));
             System.err.println("Java-Objective-C-Bridge: mvn package failed. Please check the error above.");
             System.exit(-1);
+        }
+        JSONList list = json.getList("libraries");
+        for (JSONObject library : list) {
+            String name = library.get("name");
+            String[] arguments = name.split(":");
+            String group = arguments[0];
+            String type = arguments[1];
+            JSON j = (JSON) library;
+            if (group.equals("net.java.dev.jna") && type.equals("jna")) {
+                j.set("name", "net.java.dev.jna:jna:5.10.0");
+                JSON downloads = j.getJSON("downloads");
+                JSON artifact = downloads.getJSON("artifact");
+                artifact.set("path", "net/java/dev/jna/jna/5.10.0/jna-5.10.0.jar");
+                artifact.set("url", "https://libraries.minecraft.net/net/java/dev/jna/jna/5.10.0/jna-5.10.0.jar");
+                artifact.set("sha1", "7cf4c87dd802db50721db66947aa237d7ad09418");
+                artifact.set("size", 1756400);
+            } else if (group.equals("net.java.dev.jna") && type.equals("jna-platform")) {
+                j.set("name", "net.java.dev.jna:jna-platform:5.10.0");
+                JSON downloads = j.getJSON("downloads");
+                JSON artifact = downloads.getJSON("artifact");
+                artifact.set("path", "net/java/dev/jna/jna-platform/5.10.0/jna-platform-5.10.0.jar");
+                artifact.set("url", "https://libraries.minecraft.net/net/java/dev/jna/jna-platform/5.10.0/jna-platform-5.10.0.jar");
+                artifact.set("sha1", "fbed7d9669dba47714ad0d4f4454290a997aee69");
+                artifact.set("size", 1343495);
+            }
         }
     }
 

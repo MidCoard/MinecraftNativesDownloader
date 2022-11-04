@@ -208,6 +208,7 @@ public class MinecraftNativesDownloader {
                                 if (ignoreCompileTemplates == null) {
                                     Process process = new ProcessBuilder("ant", "compile-templates").redirectOutput(new File(parent, "lwjgl-compile-templates.txt")).redirectError(new File(parent, "lwjgl-compile-templates.txt")).directory(lwjgl3).start();
                                     if (process.waitFor() != 0) {
+                                        System.err.println(Files.readString(new File(parent, "lwjgl-compile-templates.txt").toPath()));
                                         System.err.println("LWJGL compile templates failed. Please check the error above.");
                                         System.exit(-1);
                                     }
@@ -216,6 +217,7 @@ public class MinecraftNativesDownloader {
                                 platformResolver.resolveBeforeLwjglLink(lwjgl3);
                                 Process process = new ProcessBuilder("ant", "compile-native").redirectOutput(new File(parent, "lwjgl-compile-native.txt")).redirectError(new File(parent, "lwjgl-compile-native.txt")).directory(lwjgl3).start();
                                 if (process.waitFor() != 0 && ignore == null) {
+                                    System.err.println(Files.readString(new File(parent, "lwjgl-compile-native.txt").toPath()));
                                     System.err.println("LWJGL compile native failed. Please add --ignore-error to ignore this error if this is a known error.");
                                     System.exit(-1);
                                 }
@@ -252,6 +254,7 @@ public class MinecraftNativesDownloader {
                         if (o == null) {
                             process = new ProcessBuilder("chmod", "-R", "777", ".").redirectOutput(new File(parent, "jemalloc-chmod.txt")).redirectError(new File(parent, "jemalloc-chmod.txt")).directory(jmalloc).start();
                             if (process.waitFor() != 0) {
+                                System.err.println(Files.readString(new File(parent, "jemalloc-chmod.txt").toPath()));
                                 System.err.println("jemalloc: change mode of * failed. Please add --no-change-mode if there is no permission problem.");
                                 System.exit(-1);
                             }
@@ -259,11 +262,13 @@ public class MinecraftNativesDownloader {
                         System.out.println("Build jemalloc...");
                         process = new ProcessBuilder("./autogen.sh").redirectOutput(new File(parent, "jemalloc-configure.txt")).redirectError(new File(parent, "jemalloc-configure.txt")).directory(jmalloc).start();
                         if (process.waitFor() != 0) {
+                            System.err.println(Files.readString(new File(parent, "jemalloc-configure.txt").toPath()));
                             System.err.println("jemalloc: autogen failed. Please check the error above.");
                             System.exit(-1);
                         }
                         process = new ProcessBuilder("make").redirectOutput(new File(parent, "jemalloc-make.txt")).redirectError(new File(parent, "jemalloc-make.txt")).directory(jmalloc).start();
                         if (process.waitFor() != 0 && ignore == null) {
+                            System.err.println(Files.readString(new File(parent, "jemalloc-make.txt").toPath()));
                             System.err.println("jemalloc: make failed. Please add --ignore-error to ignore this error if this is a known error.");
                             System.exit(-1);
                         }
@@ -287,11 +292,13 @@ public class MinecraftNativesDownloader {
                         System.out.println("Build openal...");
                         Process process = new ProcessBuilder("cmake", "..").redirectOutput(new File(parent, "openal-cmake.txt")).redirectError(new File(parent, "openal-cmake.txt")).directory(buildFile).start();
                         if (process.waitFor() != 0) {
+                            System.err.println(Files.readString(new File(parent, "openal-cmake.txt").toPath()));
                             System.err.println("openal: cmake failed. Please check the error above.");
                             System.exit(-1);
                         }
                         process = new ProcessBuilder("make").redirectOutput(new File(parent, "openal-make.txt")).redirectError(new File(parent, "openal-make.txt")).directory(buildFile).start();
                         if (process.waitFor() != 0 && ignore == null) {
+                            System.err.println(Files.readString(new File(parent, "openal-make.txt").toPath()));
                             System.err.println("openal: make failed. Please add --ignore-error to ignore this error if this is a known error.");
                             System.exit(-1);
                         }
@@ -304,7 +311,7 @@ public class MinecraftNativesDownloader {
             if (buildLwjgl == null && ignoreBridge == null && find(builtLibs, "java-objc-bridge"))
                 TASKS.add(THREAD_POOL_SCHEDULER.run(() -> {
                     try {
-                        platformResolver.resolveBridge(parent);
+                        platformResolver.resolveBridge(parent, json);
                         System.out.println("Finish building bridge " + COUNTER.incrementAndGet() + "/" + TASKS.size());
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -322,6 +329,8 @@ public class MinecraftNativesDownloader {
                 if (!f.getName().endsWith(".txt") && !f.isDirectory())
                     Files.writeString(sha1.toPath(), f.getName() + ": " + Sha1Util.genSha1(f) + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
             }
+            File newJsonFile = new File(natives, jsonFile.getName());
+            Files.writeString(newJsonFile.toPath(), json.toJson());
             option = options.get("no-clean");
             if (option == null) {
                 System.out.println("Clean up...");

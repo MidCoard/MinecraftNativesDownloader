@@ -2,6 +2,7 @@ package top.focess.minecraft.minecraftnativesdownloader.platform;
 
 import org.apache.commons.io.FileUtils;
 import top.focess.minecraft.minecraftnativesdownloader.util.ZipUtil;
+import top.focess.util.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -46,8 +47,8 @@ public class MacosX8664Resolver extends PlatformResolver {
     }
 
     @Override
-    public void resolveBridge(File parent) throws IOException, InterruptedException {
-        PlatformResolver.getPlatformResolver(Platform.MACOS, Architecture.ARM64).resolveBridge(parent);
+    public void resolveBridge(File parent, JSONObject json) throws IOException, InterruptedException {
+        PlatformResolver.getPlatformResolver(Platform.MACOS, Architecture.ARM64).resolveBridge(parent, json);
     }
 
     @Override
