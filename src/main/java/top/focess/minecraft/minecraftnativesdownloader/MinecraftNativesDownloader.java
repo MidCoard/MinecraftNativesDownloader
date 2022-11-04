@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import top.focess.minecraft.minecraftnativesdownloader.platform.Architecture;
 import top.focess.minecraft.minecraftnativesdownloader.platform.Platform;
 import top.focess.minecraft.minecraftnativesdownloader.platform.PlatformResolver;
+import top.focess.minecraft.minecraftnativesdownloader.util.Sha1Util;
 import top.focess.minecraft.minecraftnativesdownloader.util.ZipUtil;
 import top.focess.scheduler.Task;
 import top.focess.scheduler.ThreadPoolScheduler;
@@ -23,6 +24,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -313,6 +315,11 @@ public class MinecraftNativesDownloader {
                 task.join();
             platformResolver.resolveMove(parent, natives);
             System.out.println("All natives files are moving to " + parent.getAbsolutePath() + "/natives/" + arch.getName());
+            System.out.println("Generate SHA1");
+            File sha1 = new File(natives, "sha1.txt");
+            File jobc = new File(natives, "jobc.jar");
+            if (jobc.exists())
+                Files.writeString(sha1.toPath(), "jobc.jar: " + Sha1Util.genSha1(jobc), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
             option = options.get("no-clean");
             if (option == null) {
                 System.out.println("Clean up...");
