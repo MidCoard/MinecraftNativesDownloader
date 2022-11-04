@@ -42,14 +42,28 @@ This tool is used to generate the above natives and their dependencies.
 ## Requirements
 
 1. Even with natives, you need a launcher that could use the user-defined natives. I choose [HMCL](https://github.com/huanghongxun/HMCL) as my launcher. You can choose any launcher you like. But seems like Minecraft Official Launcher does not support user-defined natives.
-2. If you use macos arm64 platform, you should install [arm64 Java 8](https://www.azul.com/downloads/) or other arm64 Java version matching your Minecraft version.
+2. If you use macos arm64 platform, you should install [arm64 Java 8](https://www.azul.com/downloads/) or other arm64 Java version matching your Minecraft version and set it as your default Java.
 
 ## Steps
 
 1. Download this tool in the release page.
-2. Put this tool in the specific version directory, or run with --path <Miencraft Version Path>
-3. After running, you will get the natives in the build/natives directory.
-
+![step0](step0.png)
+2. Put this tool in the specific version directory and run, or run with --path <Miencraft Version Path>
+![step1](step1.jpg)
+then run
+```bash
+   java -jar MinecraftNativesDownloader-1.0.jar
+```
+![step2](step2.jpg)
+3. After running, if you use HMCL, you can move the natives in the build/natives directory to the specific directory provided by HMCL.
+![step3](step3.jpg)
+Select `Custom` and enter the path of the natives directory.
+![step4](step4.png)
+Replace the `<version>.json` file and start the game to download correct jna and jna-platform jar files.
+4. If you use macos arm64 platform, you need to find out where the java-objc-bridge library in the minecraft libraries directory exists and replace it with the built java-objc-bridge library.
+![step5](step5.png)
+Disable check game integrity in HMCL. Disable automatically replace native libraries in HMCL.
+![step6](step6.png)
 ## CLI
 
 ```bash
@@ -107,7 +121,7 @@ The above table shows the supported Minecraft versions, which are tested.
 If you have tested other versions, please tell me through issues.
 
 - 1.18.2 (Under the same modpack, the running fps of arm64 version is 3 times as much as x86_64 version.)
-- 1.16.5
+- 1.16.5 (Under the same modpack, the running fps of arm64 version is at least 90, and the running fps of x86_64 version is at least 40.)
 - 1.13.2 (Under the same modpack, the running fps of arm64 version is at least 120, and the running fps of x86_64 version is at least 80 with some stops. )
 
 # Contribution
