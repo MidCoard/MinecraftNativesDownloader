@@ -28,6 +28,8 @@ import java.util.zip.GZIPInputStream;
 
 public class MacosArm64Resolver extends PlatformResolver {
 
+    private static final String LATEST_GLFW_VERSION = "3.3.8";
+
 
     @Override
     public void resolveBeforeLwjglLink(File lwjgl) throws IOException {
@@ -55,16 +57,22 @@ public class MacosArm64Resolver extends PlatformResolver {
     @Override
     public void resolveDownloadGlfw(File parent) throws IOException {
         NetworkHandler networkHandler = new NetworkHandler();
-        JSON json = networkHandler.get("https://api.github.com/repos/glfw/glfw/releases/latest", Map.of(), Map.of()).getAsJSON();
-        JSONList assets = json.getList("assets");
-        for (JSONObject asset : assets) {
-            String name = asset.get("name");
-            if (name.toUpperCase().contains("MACOS")) {
-                String url = asset.get("browser_download_url");
-                InputStream inputStream = new URL(url).openStream();
-                ZipUtil.unzip(inputStream, parent);
-                break;
+        try {
+            JSON json = networkHandler.get("https://api.github.com/repos/glfw/glfw/releases/latest", Map.of(), Map.of()).getAsJSON();
+            JSONList assets = json.getList("assets");
+            for (JSONObject asset : assets) {
+                String name = asset.get("name");
+                if (name.toUpperCase().contains("MACOS")) {
+                    String url = asset.get("browser_download_url");
+                    InputStream inputStream = new URL(url).openStream();
+                    ZipUtil.unzip(inputStream, parent);
+                    break;
+                }
             }
+        } catch (Exception e) {
+            String url = "https://github.com/glfw/glfw/releases/download/" + LATEST_GLFW_VERSION + "/glfw-" + LATEST_GLFW_VERSION + ".bin.MACOS.zip";
+            InputStream inputStream = new URL(url).openStream();
+            ZipUtil.unzip(inputStream, parent);
         }
     }
 
