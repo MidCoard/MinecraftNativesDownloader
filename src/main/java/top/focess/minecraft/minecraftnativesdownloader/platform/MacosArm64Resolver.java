@@ -113,14 +113,19 @@ public class MacosArm64Resolver extends PlatformResolver {
                         Files.copy(dylib.toPath(), target.toPath());
                 } else if (file.getName().contains("Bridge")) {
                     File dylib = find(new File(file, "target/classes"), "dylib");
+                    File jar = find(new File(file, "target"), "jar");
                     File target = new File(natives, "java-objc-bridge-" + bridgeVersion + "-natives-osx.jar");
-                    if (dylib != null && !target.exists())
+                    File targetJar = new File(natives, "java-objc-bridge-" + bridgeVersion + ".jar");
+                    if (dylib != null && !target.exists()) {
                         try (JarOutputStream jarOutputStream = new JarOutputStream(new FileOutputStream(target))) {
                             JarEntry jarEntry = new JarEntry("libjcocoa.dylib");
                             jarOutputStream.putNextEntry(jarEntry);
                             jarOutputStream.write(Files.readAllBytes(dylib.toPath()));
                             jarOutputStream.closeEntry();
                         }
+                    }
+                    if (jar != null && !targetJar.exists())
+                        Files.copy(jar.toPath(), targetJar.toPath());
                 }
             }
         }
@@ -131,7 +136,7 @@ public class MacosArm64Resolver extends PlatformResolver {
         File dir = new File(parent, "Java-Objective-C-Bridge-master");
         if (!dir.exists()) {
             System.out.println("Download Java-Objective-C-Bridge...");
-            InputStream inputStream = new URL("https://github.com/shannah/Java-Objective-C-Bridge/archive/refs/heads/master.zip").openStream();
+            InputStream inputStream = new URL("https://github.com/MidCoard/Java-Objective-C-Bridge/archive/refs/heads/master.zip").openStream();
             ZipUtil.unzip(inputStream, parent);
         }
         File target = new File(dir, "target");

@@ -318,9 +318,9 @@ public class MinecraftNativesDownloader {
             System.out.println("All natives files are moving to " + parent.getAbsolutePath() + "/natives/" + arch.getName());
             System.out.println("Generate SHA1");
             File sha1 = new File(natives, "sha1.txt");
-            for (File f : parent.listFiles()) {
-                if (!f.getName().endsWith(".txt"))
-                    Files.writeString(sha1.toPath(), f.getName() + ": " + Sha1Util.genSha1(f), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            for (File f : natives.listFiles()) {
+                if (!f.getName().endsWith(".txt") && !f.isDirectory())
+                    Files.writeString(sha1.toPath(), f.getName() + ": " + Sha1Util.genSha1(f) + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
             }
             option = options.get("no-clean");
             if (option == null) {

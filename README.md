@@ -56,7 +56,7 @@ If you have tested other versions, please tell me through issues.
 
 - 1.18.2
 - 1.16.5
-- 1.13.2
+- 1.13.2 (In the same modpack, the running fps of arm64 version is at least 120, and the running fps of x86_64 version is at least 80 with some stuc. )
 
 # Contribution
 
