@@ -8,7 +8,7 @@ Defines global properties and useful macros.
 
 This script is included in /build.xml and /config/update-dependencies.xml.
 -->
-<project name="definitions" basedir="../" xmlns:if="ant:if" xmlns:unless="ant:unless">
+<project xmlns:if="ant:if" xmlns:unless="ant:unless" name="definitions" basedir="../">
     <import file="build-bindings.xml"/>
 
     <!-- ================================================================== -->
@@ -43,7 +43,8 @@ This script is included in /build.xml and /config/update-dependencies.xml.
     will be symlinks to the corresponding directories in LWJGL_BUILD_OUTPUT. The ant
     scripts and IDE projects always work with paths relative to the project root.
     -->
-    <property name="build.output" location="${env.LWJGL_BUILD_OUTPUT}" relative="false" if:set="env.LWJGL_BUILD_OUTPUT"/>
+    <property name="build.output" location="${env.LWJGL_BUILD_OUTPUT}" relative="false"
+              if:set="env.LWJGL_BUILD_OUTPUT"/>
 
     <property name="lib" location="bin/libs" relative="true"/>
 
@@ -129,9 +130,15 @@ This script is included in /build.xml and /config/update-dependencies.xml.
     </condition>
 
     <!-- Used for testing multi-release implementations. -->
-    <condition property="core.java11"><isset property="core.java12"/></condition>
-    <condition property="core.java10"><isset property="core.java11"/></condition>
-    <condition property="core.java9"><isset property="core.java10"/></condition>
+    <condition property="core.java11">
+        <isset property="core.java12"/>
+    </condition>
+    <condition property="core.java10">
+        <isset property="core.java11"/>
+    </condition>
+    <condition property="core.java9">
+        <isset property="core.java10"/>
+    </condition>
 
     <property name="jni.headers" location="${java.home}/include" if:set="jdk9"/>
     <property name="jni.headers" location="${java.home}/../include" unless:set="jdk9"/>
@@ -253,12 +260,12 @@ This script is included in /build.xml and /config/update-dependencies.xml.
 
             <local name="input"/>
             <input
-                message="@{msg}"
-                validargs="y,n"
-                defaultvalue="n"
-                addproperty="input"
-                if:set="dir.exists"
-                />
+                    message="@{msg}"
+                    validargs="y,n"
+                    defaultvalue="n"
+                    addproperty="input"
+                    if:set="dir.exists"
+            />
             <fail message="Cancelled" if:set="dir.exists">
                 <condition if:set="dir.exists">
                     <equals arg1="n" arg2="${input}"/>
@@ -275,7 +282,8 @@ This script is included in /build.xml and /config/update-dependencies.xml.
 
         <sequential>
             <quiet>
-                <get taskname="@{name}" src="@{url}" dest="@{dest}" verbose="false" usetimestamp="true" skipexisting="@{skipexisting}"/>
+                <get taskname="@{name}" src="@{url}" dest="@{dest}" verbose="false" usetimestamp="true"
+                     skipexisting="@{skipexisting}"/>
             </quiet>
         </sequential>
     </macrodef>
@@ -288,8 +296,12 @@ This script is included in /build.xml and /config/update-dependencies.xml.
         <attribute name="sources" default="true"/>
 
         <sequential>
-            <get-quiet name="@{name}" url="https://repo1.maven.org/maven2/@{group}/@{artifact}/@{version}/@{artifact}-@{version}.jar" dest="${lib}/java/@{artifact}.jar" skipexisting="false"/>
-            <get-quiet name="@{name}" url="https://repo1.maven.org/maven2/@{group}/@{artifact}/@{version}/@{artifact}-@{version}-sources.jar" dest="${lib}/java/@{artifact}-sources.jar" skipexisting="false" if:true="@{sources}"/>
+            <get-quiet name="@{name}"
+                       url="https://repo1.maven.org/maven2/@{group}/@{artifact}/@{version}/@{artifact}-@{version}.jar"
+                       dest="${lib}/java/@{artifact}.jar" skipexisting="false"/>
+            <get-quiet name="@{name}"
+                       url="https://repo1.maven.org/maven2/@{group}/@{artifact}/@{version}/@{artifact}-@{version}-sources.jar"
+                       dest="${lib}/java/@{artifact}-sources.jar" skipexisting="false" if:true="@{sources}"/>
         </sequential>
     </macrodef>
 
@@ -299,7 +311,8 @@ This script is included in /build.xml and /config/update-dependencies.xml.
         <attribute name="dest" default="${lib}/${platform}/@{artifact}"/>
 
         <sequential>
-            <get-quiet name="@{name}" url="https://build.lwjgl.org/${build.type}/${platform.remote}/@{artifact}" dest="@{dest}" skipexisting="false"/>
+            <get-quiet name="@{name}" url="https://build.lwjgl.org/${build.type}/${platform.remote}/@{artifact}"
+                       dest="@{dest}" skipexisting="false"/>
         </sequential>
     </macrodef>
 </project>

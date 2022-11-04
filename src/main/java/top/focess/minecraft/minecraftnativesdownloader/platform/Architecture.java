@@ -2,7 +2,7 @@ package top.focess.minecraft.minecraftnativesdownloader.platform;
 
 public enum Architecture {
 
-    X86("x86"),X86_64("x64"),ARM64("arm64");
+    X86("x86"), X86_64("x64"), ARM64("arm64");
 
     private final String name;
 

@@ -130,9 +130,9 @@ public class MinecraftNativesDownloader {
                 String type = arguments[1];
                 String version = arguments[2];
                 String temp = arguments.length == 4 ? arguments[3] : "";
-                if ((group.equals("ca.weblite") || group.equals("org.lwjgl")) && (temp.contains ("natives") || ((JSON)library).contains("natives"))) {
+                if ((group.equals("ca.weblite") || group.equals("org.lwjgl")) && (temp.contains("natives") || ((JSON) library).contains("natives"))) {
                     boolean allowed = true;
-                    if (((JSON)library).contains("rules")) {
+                    if (((JSON) library).contains("rules")) {
                         JSONList rules = library.getList("rules");
                         for (JSONObject object : rules) {
                             JSON rule = (JSON) object;
@@ -154,7 +154,7 @@ public class MinecraftNativesDownloader {
             List<Pair<String, String>> builtLibs = new ArrayList<>();
             for (Pair<String, String> lib : libs) {
                 String type = lib.getFirst();
-                String fixName = type.indexOf('-') != -1 ? type.substring(type.indexOf('-') + 1) :type;
+                String fixName = type.indexOf('-') != -1 ? type.substring(type.indexOf('-') + 1) : type;
                 if (fixName.equals("opengl") || fixName.equals("tinyfd") || fixName.equals("stb"))
                     fixName = "lwjgl";
                 if (options.get("ignore-" + fixName) == null) {
@@ -229,7 +229,7 @@ public class MinecraftNativesDownloader {
                     }
                 }
             if (buildLwjgl == null && ignoreGlfw == null && find(builtLibs, "lwjgl-glfw"))
-                TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
+                TASKS.add(THREAD_POOL_SCHEDULER.run(() -> {
                     try {
                         System.out.println("Download glfw...");
                         platformResolver.resolveDownloadGlfw(parent);
@@ -240,7 +240,7 @@ public class MinecraftNativesDownloader {
                     }
                 }));
             if (buildLwjgl == null && ignoreJemalloc == null && find(builtLibs, "lwjgl-jemalloc"))
-                TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
+                TASKS.add(THREAD_POOL_SCHEDULER.run(() -> {
                     try {
                         System.out.println("Download jemalloc...");
                         InputStream inputStream = new URL("https://github.com/jemalloc/jemalloc/archive/refs/heads/master.zip").openStream();
@@ -274,7 +274,7 @@ public class MinecraftNativesDownloader {
                     }
                 }));
             if (buildLwjgl == null && ignoreOpenal == null && find(builtLibs, "lwjgl-openal"))
-                TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
+                TASKS.add(THREAD_POOL_SCHEDULER.run(() -> {
                     try {
                         System.out.println("Download openal...");
                         InputStream inputStream = new URL("https://github.com/kcat/openal-soft/archive/refs/heads/master.zip").openStream();
@@ -302,7 +302,7 @@ public class MinecraftNativesDownloader {
                     }
                 }));
             if (buildLwjgl == null && ignoreBridge == null && find(builtLibs, "java-objc-bridge"))
-                TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
+                TASKS.add(THREAD_POOL_SCHEDULER.run(() -> {
                     try {
                         platformResolver.resolveBridge(parent);
                         System.out.println("Finish building bridge " + COUNTER.incrementAndGet() + "/" + TASKS.size());
@@ -311,7 +311,7 @@ public class MinecraftNativesDownloader {
                         System.exit(-1);
                     }
                 }));
-            for (Task task :TASKS)
+            for (Task task : TASKS)
                 task.join();
             Pair<String, String> bridge = findLib(builtLibs, "java-objc-bridge");
             platformResolver.resolveMove(parent, natives, bridge == null ? null : bridge.getValue());
@@ -336,14 +336,14 @@ public class MinecraftNativesDownloader {
     }
 
     private static boolean find(List<Pair<String, String>> libs, String name) {
-        for (Pair<String, String > lib : libs)
+        for (Pair<String, String> lib : libs)
             if (lib.getKey().equals(name))
                 return true;
         return false;
     }
 
-    private static Pair<String ,String> findLib(List<Pair<String, String>> libs, String name) {
-        for (Pair<String, String > lib : libs)
+    private static Pair<String, String> findLib(List<Pair<String, String>> libs, String name) {
+        for (Pair<String, String> lib : libs)
             if (lib.getKey().equals(name))
                 return lib;
         return null;

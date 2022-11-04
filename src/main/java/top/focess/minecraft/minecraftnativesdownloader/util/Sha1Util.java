@@ -3,7 +3,6 @@ package top.focess.minecraft.minecraftnativesdownloader.util;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -22,6 +21,7 @@ public class Sha1Util {
 
     /**
      * Generate a file 's sha1 hash code.
+     *
      * @param file file
      * @return sha1 hash code of this file
      * @throws IOException if file doesn't or other IOException
@@ -31,7 +31,7 @@ public class Sha1Util {
         DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, SHA_1);
         byte[] bytes = new byte[1024];
         // read all file content
-        while (digestInputStream.read(bytes) != -1);
+        while (digestInputStream.read(bytes) != -1) ;
 
         byte[] resultByteArry = SHA_1.digest();
         return bytesToHexString(resultByteArry);

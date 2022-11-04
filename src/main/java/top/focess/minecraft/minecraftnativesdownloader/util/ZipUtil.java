@@ -11,7 +11,7 @@ import java.util.zip.ZipInputStream;
 public class ZipUtil {
 
     public static void unzip(InputStream inputStream, File dir) throws IOException {
-        try(ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
+        try (ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
             ZipEntry entry;
             while ((entry = zipInputStream.getNextEntry()) != null) {
                 File newFile = new File(dir, entry.getName());

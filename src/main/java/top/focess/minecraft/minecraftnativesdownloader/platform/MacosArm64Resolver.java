@@ -44,12 +44,12 @@ public class MacosArm64Resolver extends PlatformResolver {
         File targetDir = new File(lwjgl, "bin/libs/macos/x64");
         targetDir.mkdirs();
         GZIPInputStream gzipInputStream = new GZIPInputStream(inputStream);
-        try(TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(gzipInputStream)) {
+        try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(gzipInputStream)) {
             TarArchiveEntry entry;
             while ((entry = (TarArchiveEntry) tarArchiveInputStream.getNextEntry()) != null) {
                 String name = entry.getName().substring(entry.getName().lastIndexOf(File.separatorChar) + 1);
                 if (!entry.isDirectory() && name.endsWith(".a")) {
-                    File newFile = new File(targetDir,name);
+                    File newFile = new File(targetDir, name);
                     Files.copy(tarArchiveInputStream, newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 }
             }
@@ -127,7 +127,7 @@ public class MacosArm64Resolver extends PlatformResolver {
     }
 
     @Override
-    public void resolveBridge(File parent) throws IOException,InterruptedException {
+    public void resolveBridge(File parent) throws IOException, InterruptedException {
         File dir = new File(parent, "Java-Objective-C-Bridge-master");
         if (!dir.exists()) {
             System.out.println("Download Java-Objective-C-Bridge...");
@@ -138,7 +138,7 @@ public class MacosArm64Resolver extends PlatformResolver {
         if (target.exists())
             FileUtils.forceDelete(target);
         System.out.println("Build Java-Objective-C-Bridge...");
-        Process process = new ProcessBuilder("mvn","package").redirectOutput(new File(parent, "bridge.txt")).redirectError(new File(parent, "bridge.txt")).directory(dir).start();
+        Process process = new ProcessBuilder("mvn", "package").redirectOutput(new File(parent, "bridge.txt")).redirectError(new File(parent, "bridge.txt")).directory(dir).start();
         if (process.waitFor() != 0) {
             System.err.println("Java-Objective-C-Bridge: mvn package failed. Please check the error above.");
             System.exit(-1);

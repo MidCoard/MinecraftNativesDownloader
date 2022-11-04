@@ -19,7 +19,26 @@ public abstract class PlatformResolver {
     }
 
     public static PlatformResolver getPlatformResolver(Platform platform, Architecture architecture) {
-        return PLATFORM_RESOLVER_MAP.getOrDefault(Pair.of(platform, architecture),EmptyPlatformResolver::new).get();
+        return PLATFORM_RESOLVER_MAP.getOrDefault(Pair.of(platform, architecture), EmptyPlatformResolver::new).get();
+    }
+
+    private static long size(File file) {
+        try {
+            return Files.size(file.toPath());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected static File find(File file, String suffix) {
+        List<File> files = new ArrayList<>();
+        if (file.isDirectory())
+            for (File f : file.listFiles())
+                if (f.getName().endsWith("." + suffix))
+                    files.add(f);
+        if (files.size() == 0)
+            return null;
+        else return files.stream().max(Comparator.comparingLong(PlatformResolver::size)).orElse(null);
     }
 
     public abstract void resolveBeforeLwjglLink(File lwjgl) throws IOException;
@@ -31,24 +50,6 @@ public abstract class PlatformResolver {
     public abstract void resolveBridge(File parent) throws IOException, InterruptedException;
 
     public abstract void resolveBeforeLwjglBuild(File lwjgl) throws IOException;
-
-    private static long size(File file) {
-        try {
-            return Files.size(file.toPath());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    protected static File find(File file, String suffix) {
-        List<File> files = new ArrayList<>();
-        if (file.isDirectory())
-            for (File f : file.listFiles())
-                if (f.getName().endsWith("." + suffix))
-                    files.add(f);
-        if (files.size() == 0)
-            return null;
-        else return files.stream().max(Comparator.comparingLong(PlatformResolver::size)).orElse(null);
-    }
 
     public static class EmptyPlatformResolver extends PlatformResolver {
 

@@ -12,7 +12,7 @@ import java.nio.file.Files;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
-public class MacosX8664Resolver extends PlatformResolver{
+public class MacosX8664Resolver extends PlatformResolver {
     @Override
     public void resolveBeforeLwjglLink(File lwjgl) throws IOException {
 
@@ -53,7 +53,7 @@ public class MacosX8664Resolver extends PlatformResolver{
         if (target.exists())
             FileUtils.forceDelete(target);
         System.out.println("Build Java-Objective-C-Bridge...");
-        Process process = new ProcessBuilder("mvn","package").redirectOutput(new File(parent, "bridge.txt")).redirectError(new File(parent, "bridge.txt")).directory(dir).start();
+        Process process = new ProcessBuilder("mvn", "package").redirectOutput(new File(parent, "bridge.txt")).redirectError(new File(parent, "bridge.txt")).directory(dir).start();
         if (process.waitFor() != 0) {
             System.err.println("Java-Objective-C-Bridge: mvn package failed. Please check the error above.");
             System.exit(-1);
