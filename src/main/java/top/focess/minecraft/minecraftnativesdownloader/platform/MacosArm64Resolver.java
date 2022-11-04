@@ -3,12 +3,20 @@ package top.focess.minecraft.minecraftnativesdownloader.platform;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.FileUtils;
+import org.w3c.dom.*;
 import top.focess.minecraft.minecraftnativesdownloader.util.ZipUtil;
 import top.focess.util.json.JSON;
 import top.focess.util.json.JSONList;
 import top.focess.util.json.JSONObject;
 import top.focess.util.network.NetworkHandler;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,11 +32,9 @@ public class MacosArm64Resolver extends PlatformResolver {
     @Override
     public void resolveBeforeLwjglLink(File lwjgl) throws IOException {
         //use higher version of macos sdk, sprintf is not supported in 10.13
-        //replace it and make build.xml not automatically generate the new file.
         File file = new File(lwjgl, "modules/lwjgl/core/src/generated/c/org_lwjgl_system_libc_LibCStdio.c");
         if (file.exists())
             Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/modules/lwjgl/core/src/generated/c/org_lwjgl_system_libc_LibCStdio.c"), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/build.xml"), new File(lwjgl, "build.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
 
         InputStream inputStream = new URL("https://www.dyncall.org/r1.2/dyncall-1.2-darwin-20.2.0-arm64-r.tar.gz").openStream();
         File targetDir = new File(lwjgl, "bin/libs/macos/x64");
@@ -128,5 +134,34 @@ public class MacosArm64Resolver extends PlatformResolver {
     public void resolveBeforeLwjglBuild(File lwjgl) throws IOException {
         Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/build-definitions.xml"), new File(lwjgl, "config/build-definitions.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
         Files.copy(Thread.currentThread().getContextClassLoader().getResourceAsStream("lwjgl/config/macos/arm64/build.xml"), new File(lwjgl, "config/macos/build.xml").toPath(), StandardCopyOption.REPLACE_EXISTING);
+        try {
+            //replace it and make build.xml not automatically generate the new file when compile-native.
+            File build = new File(lwjgl, "build.xml");
+            DocumentBuilder documentBuilderFactor = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            Document document = documentBuilderFactor.parse(build);
+            document.normalize();
+            NodeList nodeList = document.getElementsByTagName("target");
+            for (int i = 0; i < nodeList.getLength(); i++) {
+                Node node = nodeList.item(i);
+                NamedNodeMap attributes = node.getAttributes();
+                if (attributes != null) {
+                    String name = attributes.getNamedItem("name").getNodeValue();
+                    if (name.equals("compile-native")) {
+                        attributes.getNamedItem("depends").setNodeValue("init");
+                    } else if (name.equals("compile-templates")) {
+                        Element element = document.createElement("antcall");
+                        element.setAttribute("target", "compile");
+                        node.appendChild(element);
+                    }
+                }
+            }
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource source = new DOMSource(document);
+            StreamResult result = new StreamResult(build);
+            transformer.transform(source, result);
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
     }
 }
