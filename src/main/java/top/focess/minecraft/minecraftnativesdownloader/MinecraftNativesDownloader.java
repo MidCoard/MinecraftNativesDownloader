@@ -47,7 +47,6 @@ public class MinecraftNativesDownloader {
         Options options = Options.parse(args,
                 new OptionParserClassifier("path", OptionType.DEFAULT_OPTION_TYPE),
                 new OptionParserClassifier("no-change-mode"),
-                new OptionParserClassifier("bridge"),
                 new OptionParserClassifier("help"),
                 new OptionParserClassifier("ignore-error"),
                 new OptionParserClassifier("no-clean"),
@@ -57,6 +56,7 @@ public class MinecraftNativesDownloader {
                 new OptionParserClassifier("ignore-jemalloc"),
                 new OptionParserClassifier("ignore-openal"),
                 new OptionParserClassifier("ignore-compile-templates"),
+                new OptionParserClassifier("ignore-bridge"),
                 new OptionParserClassifier("build-lwjgl")
         );
         Option option = options.get("help");
@@ -66,11 +66,11 @@ public class MinecraftNativesDownloader {
         Option ignoreJemalloc = options.get("ignore-jemalloc");
         Option ignoreOpenal = options.get("ignore-openal");
         Option ignoreCompileTemplates = options.get("ignore-compile-templates");
+        Option ignoreBridge = options.get("ignore-bridge");
         Option buildLwjgl = options.get("build-lwjgl");
         if (option != null) {
             System.out.println("--path <Miencraft Version Path> Generate Minecraft naives by specified Minecraft version path");
             System.out.println("--no-change-mode Do not change mode of building files.");
-            System.out.println("--bridge Build bridge for specified os.");
             System.out.println("--help Show this help message");
             System.out.println("--ignore-error Ignore error when building native files");
             System.out.println("--no-clean Do not clean the build files");
@@ -81,6 +81,7 @@ public class MinecraftNativesDownloader {
             System.out.println("--ignore-jemalloc Ignore building jemalloc");
             System.out.println("--ignore-openal Ignore building openal");
             System.out.println("--ignore-compile-templates Ignore compile-templates in building lwjgl");
+            System.out.println("--ignore-bridge Ignore building bridge for specified os");
             System.out.println("--build-lwjgl Only build lwjgl");
             return;
         }
@@ -129,7 +130,7 @@ public class MinecraftNativesDownloader {
                 String type = arguments[1];
                 String version = arguments[2];
                 String temp = arguments.length == 4 ? arguments[3] : "";
-                if (group.equals("org.lwjgl") && (temp.contains ("natives") || ((JSON)library).contains("natives"))) {
+                if ((group.equals("ca.weblite") || group.equals("org.lwjgl")) && (temp.contains ("natives") || ((JSON)library).contains("natives"))) {
                     boolean allowed = true;
                     if (((JSON)library).contains("rules")) {
                         JSONList rules = library.getList("rules");
@@ -300,8 +301,7 @@ public class MinecraftNativesDownloader {
                         System.exit(-1);
                     }
                 }));
-            option = options.get("bridge");
-            if (buildLwjgl == null && option != null)
+            if (buildLwjgl == null && ignoreBridge == null && find(builtLibs, "java-objc-bridge"))
                 TASKS.add(THREAD_POOL_SCHEDULER.run(()->{
                     try {
                         platformResolver.resolveBridge(parent);

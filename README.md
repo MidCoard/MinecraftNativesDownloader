@@ -18,6 +18,8 @@ arm64 Java 11
 
 todo
 
+## Warning
+
 # Screenshots
 
 The image below shows the performance of Minecraft on Apple Silicon with and without native libraries.
@@ -53,6 +55,7 @@ The above table shows the supported Minecraft versions, which are tested.
 If you have tested other versions, please tell me through issues.
 
 - 1.18.2
+- 1.16.5
 - 1.13.2
 
 # Contribution
