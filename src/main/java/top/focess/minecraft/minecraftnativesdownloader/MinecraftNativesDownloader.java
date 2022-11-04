@@ -75,7 +75,6 @@ public class MinecraftNativesDownloader {
             System.out.println("--ignore-error Ignore error when building native files");
             System.out.println("--no-clean Do not clean the build files");
             System.out.println("--clean Clean the native files");
-            System.out.println("--debug Show detailed message");
             System.out.println("--ignore-lwjgl Ignore building lwjgl");
             System.out.println("--ignore-glfw Ignore building glfw");
             System.out.println("--ignore-jemalloc Ignore building jemalloc");
@@ -325,10 +324,9 @@ public class MinecraftNativesDownloader {
             System.out.println("All natives files are moving to " + parent.getAbsolutePath() + "/natives/" + arch.getName());
             System.out.println("Generate SHA1");
             File sha1 = new File(natives, "sha1.txt");
-            for (File f : natives.listFiles()) {
+            for (File f : natives.listFiles())
                 if (!f.getName().endsWith(".txt") && !f.isDirectory())
-                    Files.writeString(sha1.toPath(), f.getName() + ": " + Sha1Util.genSha1(f) + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-            }
+                    Files.writeString(sha1.toPath(), f.getName() + ": " + Sha1Util.genSha1(f) + " : " + Files.size(f.toPath()) + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
             File newJsonFile = new File(natives, jsonFile.getName());
             Files.writeString(newJsonFile.toPath(), json.toJson());
             option = options.get("no-clean");
