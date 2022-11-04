@@ -313,13 +313,15 @@ public class MinecraftNativesDownloader {
                 }));
             for (Task task :TASKS)
                 task.join();
-            platformResolver.resolveMove(parent, natives);
+            Pair<String, String> bridge = findLib(builtLibs, "java-objc-bridge");
+            platformResolver.resolveMove(parent, natives, bridge == null ? null : bridge.getValue());
             System.out.println("All natives files are moving to " + parent.getAbsolutePath() + "/natives/" + arch.getName());
             System.out.println("Generate SHA1");
             File sha1 = new File(natives, "sha1.txt");
-            File jocb = new File(natives, "java-objc-bridge.jar");
-            if (jocb.exists())
-                Files.writeString(sha1.toPath(), "java-objc-bridge.jar: " + Sha1Util.genSha1(jocb), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            for (File f : parent.listFiles()) {
+                if (!f.getName().endsWith(".txt"))
+                    Files.writeString(sha1.toPath(), f.getName() + ": " + Sha1Util.genSha1(f), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            }
             option = options.get("no-clean");
             if (option == null) {
                 System.out.println("Clean up...");
@@ -338,6 +340,13 @@ public class MinecraftNativesDownloader {
             if (lib.getKey().equals(name))
                 return true;
         return false;
+    }
+
+    private static Pair<String ,String> findLib(List<Pair<String, String>> libs, String name) {
+        for (Pair<String, String > lib : libs)
+            if (lib.getKey().equals(name))
+                return lib;
+        return null;
     }
 
 }

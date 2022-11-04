@@ -12,18 +12,20 @@ import top.focess.util.network.NetworkHandler;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Map;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
 import java.util.zip.GZIPInputStream;
 
 public class MacosArm64Resolver extends PlatformResolver {
@@ -77,7 +79,7 @@ public class MacosArm64Resolver extends PlatformResolver {
     }
 
     @Override
-    public void resolveMove(File parent, File natives) throws IOException {
+    public void resolveMove(File parent, File natives, String bridgeVersion) throws IOException {
         for (File file : parent.listFiles()) {
             if (file.isDirectory()) {
                 if (file.getName().contains("glfw")) {
@@ -110,10 +112,15 @@ public class MacosArm64Resolver extends PlatformResolver {
                     if (dylib != null && !target.exists())
                         Files.copy(dylib.toPath(), target.toPath());
                 } else if (file.getName().contains("Bridge")) {
-                    File dylib = find(new File(file, "target"), "jar");
-                    File target = new File(natives, "java-objc-bridge.jar");
+                    File dylib = find(new File(file, "target/classes"), "dylib");
+                    File target = new File(natives, "java-objc-bridge-" + bridgeVersion + "-natives-osx.jar");
                     if (dylib != null && !target.exists())
-                        Files.copy(dylib.toPath(), target.toPath());
+                        try (JarOutputStream jarOutputStream = new JarOutputStream(new FileOutputStream(target))) {
+                            JarEntry jarEntry = new JarEntry("libjcocoa.dylib");
+                            jarOutputStream.putNextEntry(jarEntry);
+                            jarOutputStream.write(Files.readAllBytes(dylib.toPath()));
+                            jarOutputStream.closeEntry();
+                        }
                 }
             }
         }
