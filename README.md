@@ -113,9 +113,9 @@ The comparison of the performance of Minecraft on Apple Silicon with and without
 
 |        | Windows | Linux | Macos |
 |:------:|:-------:|:-----:|:-----:|
-|  X86   |    -    |   -   |   ✅   |
+|  X86   |    -    |   -   |  ❌❌   |
 | X86_64 |    -    |   -   |   ✅   |
-| arm64  |    ❌    |   ❌   |  ❌❌   |
+| arm64  |    ❌    |   ❌   |   ✅   |
 
 ❌❌ means not planned,
 ❌ means not supported , ✅ means supported, - means not tested or not matter.
