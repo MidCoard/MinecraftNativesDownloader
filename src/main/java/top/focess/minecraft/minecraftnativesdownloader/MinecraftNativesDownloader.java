@@ -151,18 +151,25 @@ public class MinecraftNativesDownloader {
                     String url = artifact.get("url");
                     System.out.println("Download " + url);
                     InputStream inputStream = new URL(url).openStream();
-                    String libFile = "com.sun.jna".replace(".", File.separator) + File.separator + platform.getJnaName() + "-" + arch.getJnaName() + File.separator + "libjnidispatch.jnilib";
+                    String libFilename = "com.sun.jna".replace(".", File.separator) + File.separator + platform.getJnaName() + "-" + arch.getJnaName() + File.separator + "libjnidispatch.jnilib";
                     try (JarInputStream jarInputStream = new JarInputStream(inputStream)) {
                         JarEntry entry;
                         while ((entry = jarInputStream.getNextJarEntry()) != null) {
-                            if (libFile.equals(entry.getName())) {
+                            if (libFilename.equals(entry.getName())) {
                                 File newFile = new File(natives, "libjnidispatch.jnilib");
                                 Files.copy(jarInputStream, newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                                 break;
                             }
                         }
                         jarInputStream.closeEntry();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        System.exit(-1);
                     }
+                    File libFile = new File(natives, "libjnidispatch.jnilib");
+                    if (libFile.exists())
+                        System.out.println("Downloading finished. libjnidispatch.jnilib is loaded.");
+                    else System.out.println("Downloading finished. Cannot find libjnidispatch.jnilib.");
                 }
             }
             System.out.println("Collect finished. All libraries needed to download: " + libs.size());

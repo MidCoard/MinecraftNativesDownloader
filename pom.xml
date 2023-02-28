@@ -6,7 +6,7 @@
 
     <groupId>org.example</groupId>
     <artifactId>MinecraftNativesDownloader</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -18,7 +18,7 @@
         <dependency>
             <groupId>top.focess</groupId>
             <artifactId>focess-util</artifactId>
-            <version>1.1.15</version>
+            <version>1.1.16</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
