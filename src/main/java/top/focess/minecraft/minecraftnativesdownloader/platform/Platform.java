@@ -2,17 +2,19 @@ package top.focess.minecraft.minecraftnativesdownloader.platform;
 
 public enum Platform {
 
-    WINDOWS("windows", "natives-windows"),
-    MACOS("osx", "natives-macos"),
-    LINUX("linux", "natives-linux");
+    WINDOWS("windows", "natives-windows", "win32"),
+    MACOS("osx", "natives-macos", "darwin"),
+    LINUX("linux", "natives-linux", "linux");
 
 
     private final String nativesName;
     private final String downloadName;
+    private final String jnaName;
 
-    Platform(String nativesName, String downloadName) {
+    Platform(String nativesName, String downloadName, String jnaName) {
         this.nativesName = nativesName;
         this.downloadName = downloadName;
+        this.jnaName = jnaName;
     }
 
     public static Platform parse(String os) {
@@ -34,5 +36,9 @@ public enum Platform {
         if (this == MACOS && arch == Architecture.ARM64)
             return downloadName + "-arm64";
         return downloadName;
+    }
+
+    public String getJnaName() {
+        return jnaName;
     }
 }
