@@ -37,10 +37,6 @@ This is jemalloc library. It can be built from jemalloc source code.
 
 This library is needed by java-objc-bridge, which is needed by Text2Speech.
 
-- libjnidispatch.jnilib
-
-This library is needed by jna. This is a specific need for fabric 1.19.2 ( at least now ).
-
 This tool is used to generate the above natives and their dependencies.
 
 ## Requirements
@@ -63,14 +59,11 @@ then run
 ![step3](step3.jpg)
 Select `Custom` and enter the path of the natives' directory.
 ![step4](step4.png)
-Replace the `<version>.json` file and start the game to download correct jna and jna-platform jar files.
+**Replace the `<version>.json` file and start the game to download correct jna and jna-platform jar files.**
 4. If you use macos arm64 platform, you need to find out where the java-objc-bridge library in the minecraft libraries directory exists and replace it with the built java-objc-bridge library.
 ![step5](step5.png)
 Disable check game integrity in HMCL. Disable automatically replace native libraries in HMCL.
 ![step6](step6.png)
-Add "jna.boot.library.path" ( = the path of the natives' directory ) to system property. This is a specific need for fabric 1.19.2 ( at least now ).
-![step7](step7.png)
-
 ## CLI
 
 ```bash
