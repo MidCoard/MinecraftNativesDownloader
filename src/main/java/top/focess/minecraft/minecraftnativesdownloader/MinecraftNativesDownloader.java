@@ -50,6 +50,7 @@ public class MinecraftNativesDownloader {
                 new OptionParserClassifier("help"),
                 new OptionParserClassifier("ignore-error"),
                 new OptionParserClassifier("no-clean"),
+                new OptionParserClassifier("no-download"),
                 new OptionParserClassifier("clean"),
                 new OptionParserClassifier("ignore-lwjgl"),
                 new OptionParserClassifier("ignore-glfw"),
@@ -152,7 +153,7 @@ public class MinecraftNativesDownloader {
             System.out.println("Needed libraries: " + libs);
             List<Pair<String, String>> builtLibs = new ArrayList<>();
             option = options.get("no-download");
-            if (option != null) {
+            if (option == null) {
                 System.out.println("Start downloading...");
                 for (Pair<String, String> lib : libs) {
                     String type = lib.getFirst();
