@@ -70,7 +70,8 @@ public class MinecraftNativesDownloader {
         Option buildLwjgl = options.get("build-lwjgl");
         if (option != null) {
             System.out.println("--path <Miencraft Version Path> Generate Minecraft naives by specified Minecraft version path");
-            System.out.println("--no-change-mode Do not change mode of building files.");
+            System.out.println("--no-change-mode Do not change mode of building files");
+            System.out.println("--no-download Do not try to download files from remote and only build them");
             System.out.println("--help Show this help message");
             System.out.println("--ignore-error Ignore error when building native files");
             System.out.println("--no-clean Do not clean the build files");
@@ -119,7 +120,7 @@ public class MinecraftNativesDownloader {
             if (natives.exists())
                 FileUtils.forceDelete(natives);
             natives.mkdirs();
-            JSONObject json = JSON.parse(Files.readString(jsonFile.toPath()));
+            JSONObject json = JSON.parse(top.focess.minecraft.minecraftnativesdownloader.util.Files.readString(jsonFile.toPath()));
             JSONList libraries = json.getList("libraries");
             System.out.println("Start collecting libraries needed to download...");
             for (JSONObject library : libraries) {
@@ -149,40 +150,44 @@ public class MinecraftNativesDownloader {
             }
             System.out.println("Collect finished. All libraries needed to download: " + libs.size());
             System.out.println("Needed libraries: " + libs);
-            System.out.println("Start downloading...");
             List<Pair<String, String>> builtLibs = new ArrayList<>();
-            for (Pair<String, String> lib : libs) {
-                String type = lib.getFirst();
-                String fixName = type.indexOf('-') != -1 ? type.substring(type.indexOf('-') + 1) : type;
-                if (fixName.equals("opengl") || fixName.equals("tinyfd") || fixName.equals("stb"))
-                    fixName = "lwjgl";
-                if (options.get("ignore-" + fixName) == null) {
-                    String version = lib.getSecond();
-                    String url = PREFIX_URL + type + "/" + version + "/" + type + "-" + version + "-" + platform.getDownloadName(arch) + ".jar";
-                    System.out.println("Download " + url);
-                    try {
-                        InputStream inputStream = new URL(url).openStream();
-                        try (JarInputStream jarInputStream = new JarInputStream(inputStream)) {
-                            JarEntry entry;
-                            while ((entry = jarInputStream.getNextJarEntry()) != null) {
-                                String name = entry.getName().substring(entry.getName().lastIndexOf(File.separatorChar) + 1);
-                                if (name.endsWith(".dylib")) {
-                                    File newFile = new File(natives, name);
-                                    Files.copy(jarInputStream, newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                                    break;
+            option = options.get("no-download");
+            if (option != null) {
+                System.out.println("Start downloading...");
+                for (Pair<String, String> lib : libs) {
+                    String type = lib.getFirst();
+                    String fixName = type.indexOf('-') != -1 ? type.substring(type.indexOf('-') + 1) : type;
+                    if (fixName.equals("opengl") || fixName.equals("tinyfd") || fixName.equals("stb"))
+                        fixName = "lwjgl";
+                    if (options.get("ignore-" + fixName) == null) {
+                        String version = lib.getSecond();
+                        String url = PREFIX_URL + type + "/" + version + "/" + type + "-" + version + "-" + platform.getDownloadName(arch) + ".jar";
+                        System.out.println("Download " + url);
+                        try {
+                            InputStream inputStream = new URL(url).openStream();
+                            try (JarInputStream jarInputStream = new JarInputStream(inputStream)) {
+                                JarEntry entry;
+                                while ((entry = jarInputStream.getNextJarEntry()) != null) {
+                                    String name = entry.getName().substring(entry.getName().lastIndexOf(File.separatorChar) + 1);
+                                    if (name.endsWith(".dylib")) {
+                                        File newFile = new File(natives, name);
+                                        Files.copy(jarInputStream, newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                                        break;
+                                    }
                                 }
+                                jarInputStream.closeEntry();
                             }
-                            jarInputStream.closeEntry();
+                        } catch (FileNotFoundException e) {
+                            builtLibs.add(lib);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            System.exit(-1);
                         }
-                    } catch (FileNotFoundException e) {
-                        builtLibs.add(lib);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        System.exit(-1);
-                    }
-                } else builtLibs.add(lib);
-            }
-            System.out.println("Downloading finished. All libraries downloaded: " + (libs.size() - builtLibs.size()));
+                    } else builtLibs.add(lib);
+                }
+                System.out.println("Downloading finished. All libraries downloaded: " + (libs.size() - builtLibs.size()));
+            } else
+                builtLibs.addAll(libs);
             System.out.println("Start building libraries: " + builtLibs.size());
             Set<String> versions = new HashSet<>();
             if (ignoreLwjgl == null)
@@ -207,7 +212,7 @@ public class MinecraftNativesDownloader {
                                 if (ignoreCompileTemplates == null) {
                                     Process process = new ProcessBuilder("ant", "compile-templates").redirectOutput(new File(parent, "lwjgl-compile-templates.txt")).redirectError(new File(parent, "lwjgl-compile-templates.txt")).directory(lwjgl3).start();
                                     if (process.waitFor() != 0) {
-                                        System.err.println(Files.readString(new File(parent, "lwjgl-compile-templates.txt").toPath()));
+                                        System.err.println(top.focess.minecraft.minecraftnativesdownloader.util.Files.readString(new File(parent, "lwjgl-compile-templates.txt").toPath()));
                                         System.err.println("LWJGL compile templates failed. Please check the error above.");
                                         System.exit(-1);
                                     }
@@ -216,7 +221,7 @@ public class MinecraftNativesDownloader {
                                 platformResolver.resolveBeforeLwjglLink(lwjgl3);
                                 Process process = new ProcessBuilder("ant", "compile-native").redirectOutput(new File(parent, "lwjgl-compile-native.txt")).redirectError(new File(parent, "lwjgl-compile-native.txt")).directory(lwjgl3).start();
                                 if (process.waitFor() != 0 && ignore == null) {
-                                    System.err.println(Files.readString(new File(parent, "lwjgl-compile-native.txt").toPath()));
+                                    System.err.println(top.focess.minecraft.minecraftnativesdownloader.util.Files.readString(new File(parent, "lwjgl-compile-native.txt").toPath()));
                                     System.err.println("LWJGL compile native failed. Please add --ignore-error to ignore this error if this is a known error.");
                                     System.exit(-1);
                                 }
@@ -253,7 +258,7 @@ public class MinecraftNativesDownloader {
                         if (o == null) {
                             process = new ProcessBuilder("chmod", "-R", "777", ".").redirectOutput(new File(parent, "jemalloc-chmod.txt")).redirectError(new File(parent, "jemalloc-chmod.txt")).directory(jmalloc).start();
                             if (process.waitFor() != 0) {
-                                System.err.println(Files.readString(new File(parent, "jemalloc-chmod.txt").toPath()));
+                                System.err.println(top.focess.minecraft.minecraftnativesdownloader.util.Files.readString(new File(parent, "jemalloc-chmod.txt").toPath()));
                                 System.err.println("jemalloc: change mode of * failed. Please add --no-change-mode if there is no permission problem.");
                                 System.exit(-1);
                             }
@@ -261,13 +266,13 @@ public class MinecraftNativesDownloader {
                         System.out.println("Build jemalloc...");
                         process = new ProcessBuilder("./autogen.sh").redirectOutput(new File(parent, "jemalloc-configure.txt")).redirectError(new File(parent, "jemalloc-configure.txt")).directory(jmalloc).start();
                         if (process.waitFor() != 0) {
-                            System.err.println(Files.readString(new File(parent, "jemalloc-configure.txt").toPath()));
+                            System.err.println(top.focess.minecraft.minecraftnativesdownloader.util.Files.readString(new File(parent, "jemalloc-configure.txt").toPath()));
                             System.err.println("jemalloc: autogen failed. Please check the error above.");
                             System.exit(-1);
                         }
                         process = new ProcessBuilder("make").redirectOutput(new File(parent, "jemalloc-make.txt")).redirectError(new File(parent, "jemalloc-make.txt")).directory(jmalloc).start();
                         if (process.waitFor() != 0 && ignore == null) {
-                            System.err.println(Files.readString(new File(parent, "jemalloc-make.txt").toPath()));
+                            System.err.println(top.focess.minecraft.minecraftnativesdownloader.util.Files.readString(new File(parent, "jemalloc-make.txt").toPath()));
                             System.err.println("jemalloc: make failed. Please add --ignore-error to ignore this error if this is a known error.");
                             System.exit(-1);
                         }
@@ -291,13 +296,13 @@ public class MinecraftNativesDownloader {
                         System.out.println("Build openal...");
                         Process process = new ProcessBuilder("cmake", "..").redirectOutput(new File(parent, "openal-cmake.txt")).redirectError(new File(parent, "openal-cmake.txt")).directory(buildFile).start();
                         if (process.waitFor() != 0) {
-                            System.err.println(Files.readString(new File(parent, "openal-cmake.txt").toPath()));
+                            System.err.println(top.focess.minecraft.minecraftnativesdownloader.util.Files.readString(new File(parent, "openal-cmake.txt").toPath()));
                             System.err.println("openal: cmake failed. Please check the error above.");
                             System.exit(-1);
                         }
                         process = new ProcessBuilder("make").redirectOutput(new File(parent, "openal-make.txt")).redirectError(new File(parent, "openal-make.txt")).directory(buildFile).start();
                         if (process.waitFor() != 0 && ignore == null) {
-                            System.err.println(Files.readString(new File(parent, "openal-make.txt").toPath()));
+                            System.err.println(top.focess.minecraft.minecraftnativesdownloader.util.Files.readString(new File(parent, "openal-make.txt").toPath()));
                             System.err.println("openal: make failed. Please add --ignore-error to ignore this error if this is a known error.");
                             System.exit(-1);
                         }
@@ -326,9 +331,9 @@ public class MinecraftNativesDownloader {
             File sha1 = new File(natives, "sha1.txt");
             for (File f : natives.listFiles())
                 if (!f.getName().endsWith(".txt") && !f.isDirectory())
-                    Files.writeString(sha1.toPath(), f.getName() + ": " + Sha1Util.genSha1(f) + " : " + Files.size(f.toPath()) + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                    top.focess.minecraft.minecraftnativesdownloader.util.Files.writeString(sha1.toPath(), f.getName() + ": " + Sha1Util.genSha1(f) + " : " + Files.size(f.toPath()) + "\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);
             File newJsonFile = new File(natives, jsonFile.getName());
-            Files.writeString(newJsonFile.toPath(), json.toJson());
+            top.focess.minecraft.minecraftnativesdownloader.util.Files.writeString(newJsonFile.toPath(), json.toJson());
             option = options.get("no-clean");
             if (option == null) {
                 System.out.println("Clean up...");

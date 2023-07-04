@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
@@ -60,7 +61,7 @@ public class MacosArm64Resolver extends PlatformResolver {
     public void resolveDownloadGlfw(File parent) throws IOException {
         NetworkHandler networkHandler = new NetworkHandler();
         try {
-            JSON json = networkHandler.get("https://api.github.com/repos/glfw/glfw/releases/latest", Map.of(), Map.of()).getAsJSON();
+            JSON json = networkHandler.get("https://api.github.com/repos/glfw/glfw/releases/latest", new HashMap<>(), new HashMap<>()).getAsJSON();
             JSONList assets = json.getList("assets");
             for (JSONObject asset : assets) {
                 String name = asset.get("name");
@@ -93,14 +94,18 @@ public class MacosArm64Resolver extends PlatformResolver {
                     File opengl = new File(natives, "liblwjgl_opengl.dylib");
                     File stb = new File(natives, "liblwjgl_stb.dylib");
                     File tinyfd = new File(natives, "liblwjgl_tinyfd.dylib");
-                    if (!lwjgl.exists())
-                        Files.copy(new File(dir, "liblwjgl.dylib").toPath(), lwjgl.toPath());
-                    if (!opengl.exists())
-                        Files.copy(new File(dir, "liblwjgl_opengl.dylib").toPath(), opengl.toPath());
-                    if (!stb.exists())
-                        Files.copy(new File(dir, "liblwjgl_stb.dylib").toPath(), stb.toPath());
-                    if (!tinyfd.exists())
-                        Files.copy(new File(dir, "liblwjgl_tinyfd.dylib").toPath(), tinyfd.toPath());
+                    File sourceLwjgl = new File(dir, "liblwjgl.dylib");
+                    File sourceOpengl = new File(dir, "liblwjgl_opengl.dylib");
+                    File sourceStb = new File(dir, "liblwjgl_stb.dylib");
+                    File sourceTinyfd = new File(dir, "liblwjgl_tinyfd.dylib");
+                    if (!lwjgl.exists() && sourceLwjgl.exists())
+                        Files.copy(sourceLwjgl.toPath(), lwjgl.toPath());
+                    if (!opengl.exists() && sourceOpengl.exists())
+                        Files.copy(sourceOpengl.toPath(), opengl.toPath());
+                    if (!stb.exists() && sourceStb.exists())
+                        Files.copy(sourceStb.toPath(), stb.toPath());
+                    if (!tinyfd.exists() && sourceTinyfd.exists())
+                        Files.copy(sourceTinyfd.toPath(), tinyfd.toPath());
                 } else if (file.getName().contains("jemalloc")) {
                     File dylib = find(new File(file, "lib"), "dylib");
                     File target = new File(natives, "libjemalloc.dylib");
@@ -145,7 +150,7 @@ public class MacosArm64Resolver extends PlatformResolver {
         System.out.println("Build Java-Objective-C-Bridge...");
         Process process = new ProcessBuilder("mvn", "package").redirectOutput(new File(parent, "bridge.txt")).redirectError(new File(parent, "bridge.txt")).directory(dir).start();
         if (process.waitFor() != 0) {
-            System.err.println(Files.readString(new File(parent, "bridge.txt").toPath()));
+            System.err.println(top.focess.minecraft.minecraftnativesdownloader.util.Files.readString(new File(parent, "bridge.txt").toPath()));
             System.err.println("Java-Objective-C-Bridge: mvn package failed. Please check the error above.");
             System.exit(-1);
         }
