@@ -57,9 +57,9 @@ then run
 ![step2](step2.jpg)
 3. After running, if you use HMCL, you can move the natives in the build/natives directory to the specific directory provided by HMCL.
 ![step3](step3.jpg)
-Select `Custom` and enter the path of the natives directory.
+Select `Custom` and enter the path of the natives' directory.
 ![step4](step4.png)
-Replace the `<version>.json` file and start the game to download correct jna and jna-platform jar files.
+**Replace the `<version>.json` file and start the game to download correct jna and jna-platform jar files.**
 4. If you use macos arm64 platform, you need to find out where the java-objc-bridge library in the minecraft libraries directory exists and replace it with the built java-objc-bridge library.
 ![step5](step5.png)
 Disable check game integrity in HMCL. Disable automatically replace native libraries in HMCL.
@@ -104,11 +104,11 @@ The comparison of the performance of Minecraft on Apple Silicon with and without
 
 # Supported Platform
 
-|        | Windows | Linux | Macos  |
-|:------:|:-------:|:-----:|:------:|
-|  X86   |    -    |   -   |   ✅    |
-| X86_64 |    -    |   -   |   ❌❌   |
-| arm64  |    ❌    |   ❌   |   ✅    |
+|        | Windows | Linux | Macos |
+|:------:|:-------:|:-----:|:-----:|
+|  X86   |    -    |   -   |  ❌❌   |
+| X86_64 |    -    |   -   |   ✅   |
+| arm64  |    ❌    |   ❌   |   ✅   |
 
 ❌❌ means not planned,
 ❌ means not supported , ✅ means supported, - means not tested or not matter.
