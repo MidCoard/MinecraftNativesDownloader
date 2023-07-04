@@ -92,7 +92,7 @@ public class MinecraftNativesDownloader {
         PlatformResolver platformResolver = PlatformResolver.getPlatformResolver(platform, arch);
         Scanner scanner = new Scanner(System.in);
         if (arch != Architecture.ARM64) {
-            System.err.println("Architecture of your computer is not ARM64. If this is want you want, you can ignore this error.");
+            System.err.println("Architecture of your computer is not ARM64. If this is what you want, you can ignore this error.");
             System.err.println("But if your computer is ARM64, please make sure you are using ARM64 Java.");
             System.err.println("Please enter 'ENTER' key to continue.");
             scanner.nextLine();
