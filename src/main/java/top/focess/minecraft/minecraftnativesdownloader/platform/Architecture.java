@@ -16,6 +16,7 @@ public enum Architecture {
         switch (arch) {
             case "x86":
                 return X86;
+            case "amd64":
             case "x86_64":
                 return X86_64;
             case "arm64":
